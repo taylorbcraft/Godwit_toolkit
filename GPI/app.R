@@ -38,8 +38,8 @@ server <- function(input, output, session) {
   
   # load data once and reuse, filtering for 2021 and newer
   all_locations <- reactive({
-    req(file.exists("GPI/locations_swf.rds"))
-    data <- readRDS("GPI/locations_swf.rds")
+    req(file.exists("locations_swf.rds"))
+    data <- readRDS("locations_swf.rds")
   })
   
   # reactive value to store the drawn aoi
@@ -49,10 +49,10 @@ server <- function(input, output, session) {
   gpi_rasters <- reactive({
     # load rasters for 2021, 2022, 2023, and 2024
     raster_files <- list(
-      gpi_2021 = rast("GPI/gpi_data/gpi_2021.tif"),
-      gpi_2022 = rast("GPI/gpi_data/gpi_2022.tif"),
-      gpi_2023 = rast("GPI/gpi_data/gpi_2023.tif"),
-      gpi_2024 = rast("GPI/gpi_data/gpi_2024.tif")
+      gpi_2021 = rast("gpi_data/gpi_2021.tif"),
+      gpi_2022 = rast("gpi_data/gpi_2022.tif"),
+      gpi_2023 = rast("gpi_data/gpi_2023.tif"),
+      gpi_2024 = rast("gpi_data/gpi_2024.tif")
     )
     
     # project and sample the rasters for leaflet display

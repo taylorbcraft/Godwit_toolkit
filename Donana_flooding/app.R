@@ -36,8 +36,8 @@ server <- function(input, output, session) {
   
   # load location data
   all_locations <- reactive({
-    req(file.exists("Donana_flooding/locations_donana.rds"))
-    readRDS("Donana_flooding/locations_donana.rds")
+    req(file.exists("locations_donana.rds"))
+    readRDS("locations_donana.rds")
   })
   
   # update the year selection input based on the data
@@ -79,7 +79,7 @@ server <- function(input, output, session) {
     
     # get the three-letter uppercase month abbreviation (e.g., "JAN")
     month_abbrev <- toupper(substr(input$month, 1, 3))
-    file_path <- paste0("Donana_flooding/SWIR/SWIR1_Composite_", month_abbrev, input$year, ".tif")
+    file_path <- paste0("SWIR/SWIR1_Composite_", month_abbrev, input$year, ".tif")
     if (!file.exists(file_path)) return(NULL)
     
     r <- rast(file_path)

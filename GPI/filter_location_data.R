@@ -1,8 +1,8 @@
 library(sf)
 library(dplyr)
 
-swf <- read_sf('parcel_geometry/LUI_SWF_2016_WGS84.shp')
-locations <- readRDS('allLocations.rds')
+swf <- read_sf('GPI/parcel_geometry/LUI_SWF_2016_WGS84.shp')
+locations <- readRDS('GPI/allLocations.rds')
 locations <- locations %>%
   mutate(year = format(timestamp, "%Y")) %>%
   filter(year >= "2021")
@@ -16,4 +16,4 @@ locations_clipped <- locations_sf %>%
 
 locations_clipped <- st_intersection(locations_clipped,st_union(swf))
 
-saveRDS(locations_clipped,'locations_swf.rds')
+saveRDS(locations_clipped,'GPI/locations_swf.rds')

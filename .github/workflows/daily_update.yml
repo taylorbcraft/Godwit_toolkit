@@ -2,10 +2,10 @@ name: Daily GPS Update and Deploy to Shinyapps.io
 
 on:
   schedule:
-    - cron: '0 */3 * * *'
+    - cron: '0 */3 * * *'  # Runs every 3 hours
   push:
     branches:
-      - main  # deploy on push to main branch
+      - main  # Deploy on push to main branch
 
 jobs:
   update-gps-data:
@@ -19,7 +19,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev
+          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
 
       # step 3: set up R
       - name: Set up R
@@ -27,8 +27,7 @@ jobs:
 
       # step 4: install required R packages
       - name: Install R packages
-        run: |
-          install.packages(c("sf", "cronR", "move", "dplyr", "purrr", "data.table", "zoo", "lubridate"), repos="https://cloud.r-project.org")
+        run: Rscript -e 'install.packages(c("sf", "cronR", "move", "dplyr", "purrr", "data.table", "zoo", "lubridate"), repos="https://cloud.r-project.org")'
 
       # step 5: run R scripts to update location data
       - name: Run location_data.R
@@ -44,14 +43,15 @@ jobs:
         run: Rscript Senegal_delta/filter_location_data.R
 
       # step 6: deploy app to shinyapps.io
-      - name: Deploy to shinyapps.io
-        run: |
-          install.packages("rsconnect")
-          library(rsconnect)
+      - name: Install rsconnect and Deploy to shinyapps.io
+        run: Rscript -e '
+          install.packages("rsconnect", repos="https://cloud.r-project.org");
+          library(rsconnect);
           rsconnect::setAccountInfo(name = Sys.getenv("SHINYAPPS_ACCOUNT"),
                                     token = Sys.getenv("SHINYAPPS_TOKEN"),
-                                    secret = Sys.getenv("SHINYAPPS_SECRET"))
+                                    secret = Sys.getenv("SHINYAPPS_SECRET"));
           rsconnect::deployApp(appDir = ".", forceUpdate = TRUE)
+        '
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

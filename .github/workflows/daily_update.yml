@@ -34,7 +34,7 @@ jobs:
         run: Rscript location_data.R
         
       - name: Run filter_location_data.R for Donana
-        run: Rscript Donana/flooding/filter_location_data.R
+        run: Rscript Donana_flooding/filter_location_data.R
 
       - name: Run filter_location_data.R for GPI
         run: Rscript GPI/filter_location_data.R

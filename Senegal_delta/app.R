@@ -1,4 +1,3 @@
-# import libraries
 library(shiny)
 library(leaflet)
 library(leaflet.extras)
@@ -38,12 +37,12 @@ server <- function(input, output, session) {
   
   # load data once and reuse
   all_locations <- reactive({
-    req(file.exists("locations_senegal_delta.rds"))
-    readRDS("locations_senegal_delta.rds")
+    req(file.exists("Senegal_delta/locations_senegal_delta.rds"))
+    readRDS("Senegal_delta/locations_senegal_delta.rds")
   })
   
   # load raster file (land cover)
-  land_cover_raster <- rast("landCover.tif")
+  land_cover_raster <- rast("Senegal_delta/landCover.tif")
   # project raster for leaflet and sample down
   land_cover_raster <- projectRasterForLeaflet(land_cover_raster, method = 'ngb')
   land_cover_raster <- spatSample(land_cover_raster, 1000000, method = "regular", as.raster = TRUE)

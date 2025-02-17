@@ -3,10 +3,10 @@ library(dplyr)
 library(mapview)
 library(terra)
 
-donana <- read_sf('donana_geometry/Donana.shp')
+donana <- read_sf('Donana_flooding/donana_geometry/Donana.shp')
 donana <- st_transform(donana,'EPSG:4326')
 donana <- vect(donana)
-writeVector(donana,'donana.gpkg')
+writeVector(donana,'Donana_flooding/donana.gpkg')
 
 locations <- readRDS('allLocations.rds')
 locations <- locations %>%
@@ -22,4 +22,4 @@ locations_clipped <- locations_sf %>%
 
 locations_clipped <- st_intersection(locations_clipped,st_union(donana))
 
-saveRDS(locations_clipped,'locations_donana.rds')
+saveRDS(locations_clipped,'Donana_flooding/locations_donana.rds')

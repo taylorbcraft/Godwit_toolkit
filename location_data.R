@@ -108,6 +108,10 @@ allLocations <- combined_data_filter_5 %>%
   dplyr::select(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor)
 
 # Save
-saveRDS(allLocations, "allLocations.rds")
+saveRDS(allLocations, "Donana_flooding/allLocations.rds")
+saveRDS(allLocations, "GPI/allLocations.rds")
+saveRDS(allLocations, "Senegal_delta/allLocations.rds")
+saveRDS(allLocations, "Tracking_Summary/allLocations.rds")
+
 
 

@@ -1,9 +1,9 @@
 name: Daily GPS Update
 
 on:
-  # schedule below sets it to run once every day at 00:00 UTC
+  # schedule below sets it to run every 3 hours at minute 0 UTC
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 */3 * * *'
   # uncomment for testing whenever you push:
   # push:
 
@@ -11,18 +11,18 @@ jobs:
   update-gps-data:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Check out your repository
+      # step 1: check out your repository
       - name: Check out repo
         uses: actions/checkout@v3
 
-      # Step 2: Set up R
+      # step 2: set up r
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
 
-      # Step 3: Install required packages
+      # step 3: install required packages
       - name: Install R packages
         run: Rscript -e 'install.packages(c("cronR","move","dplyr","purrr","data.table","zoo","lubridate"), repos="https://cloud.r-project.org")'
 
-      # Step 4: Run your R script
+      # step 4: run your r script
       - name: Run location_data.R
         run: Rscript location_data.R

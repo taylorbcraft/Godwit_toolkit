@@ -1,0 +1,938 @@
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+Error in `map()`:
+i In index: 1.
+i With name: ib19.
+Caused by error in `fix.by()`:
+! 'by' must specify a uniquely valid column
+Backtrace:
+     x
+  1. +-purrr::map(study_ids, get_data)
+  2. | \-purrr:::map_("list", .x, .f, ..., .progress = .progress)
+  3. |   +-purrr:::with_indexed_errors(...)
+  4. |   | \-base::withCallingHandlers(...)
+  5. |   +-purrr:::call_with_cleanup(...)
+  6. |   \-global .f(.x[[i]], ...)
+  7. |     +-move::getMovebankReferenceTable(study = study_id, login = login)
+  8. |     \-move::getMovebankReferenceTable(study = study_id, login = login)
+  9. |       \-base::merge.data.frame(...)
+ 10. |         \-base (local) fix.by(by.y, y)
+ 11. |           \-base::stop(...)
+ 12. \-base::.handleSimpleError(...)
+ 13.   \-purrr (local) h(simpleError(msg, call))
+ 14.     \-cli::cli_abort(...)
+ 15.       \-rlang::abort(...)
+Execution halted
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+There were 50 or more warnings (use warnings() to see the first 50)
+Error in `group_by()`:
+! Must group by variables found in `.data`.
+x Column `local_identifier` is not found.
+Backtrace:
+     x
+  1. +-... %>% distinct()
+  2. +-dplyr::distinct(.)
+  3. +-dplyr::mutate(., year = year(timestamp))
+  4. +-dplyr::ungroup(.)
+  5. +-dplyr::filter(., outlier == "normal")
+  6. +-dplyr::mutate(...)
+  7. +-dplyr::mutate(...)
+  8. +-dplyr::arrange(., local_identifier, timestamp)
+  9. +-dplyr::group_by(., local_identifier)
+ 10. \-dplyr:::group_by.data.frame(., local_identifier)
+ 11.   \-dplyr::group_by_prepare(.data, ..., .add = .add, error_call = current_env())
+ 12.     \-rlang::abort(bullets, call = error_call)
+Execution halted
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+There were 50 or more warnings (use warnings() to see the first 50)
+Error in h(simpleError(msg, call)) : 
+  error in evaluating the argument 'x' in selecting a method for function 'unique': object 'allLocations' not found
+Calls: unique -> .handleSimpleError -> h
+Execution halted
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+There were 50 or more warnings (use warnings() to see the first 50)
+[1] "Limosa limosa limosa"    "Limosa limosa"          
+[3] "Limosa limosa islandica" ""                       
+[5] NA                        "ssp. lmosa"             
+[7] "Limosa lapponica"        "islandica"              
+[9] "Limosa limosa limos"    
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+There were 50 or more warnings (use warnings() to see the first 50)
+[1] "Limosa limosa limosa"    "Limosa limosa"          
+[3] "Limosa limosa islandica" ""                       
+[5] NA                        "ssp. lmosa"             
+[7] "Limosa lapponica"        "islandica"              
+[9] "Limosa limosa limos"    
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+There were 50 or more warnings (use warnings() to see the first 50)
+[1] "Limosa limosa limosa"    "Limosa limosa"          
+[3] "Limosa limosa islandica" ""                       
+[5] NA                        "ssp. lmosa"             
+[7] "Limosa lapponica"        "islandica"              
+[9] "Limosa limosa limos"    
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+There were 50 or more warnings (use warnings() to see the first 50)
+[1] "Limosa limosa limosa"    "Limosa limosa"          
+[3] "Limosa limosa islandica" ""                       
+[5] NA                        "ssp. lmosa"             
+[7] "Limosa lapponica"        "islandica"              
+[9] "Limosa limosa limos"    
+Error in `dplyr::select()`:
+! Can't select columns that don't exist.
+x Column `year` doesn't exist.
+Backtrace:
+     x
+  1. +-combined_data %>% ...
+  2. +-dplyr::select(...)
+  3. +-dplyr:::select.data.frame(...)
+  4. | \-tidyselect::eval_select(expr(c(...)), data = .data, error_call = error_call)
+  5. |   \-tidyselect:::eval_select_impl(...)
+  6. |     +-tidyselect:::with_subscript_errors(...)
+  7. |     | \-base::withCallingHandlers(...)
+  8. |     \-tidyselect:::vars_select_eval(...)
+  9. |       \-tidyselect:::walk_data_tree(expr, data_mask, context_mask)
+ 10. |         \-tidyselect:::eval_c(expr, data_mask, context_mask)
+ 11. |           \-tidyselect:::reduce_sels(node, data_mask, context_mask, init = init)
+ 12. |             \-tidyselect:::walk_data_tree(new, data_mask, context_mask)
+ 13. |               \-tidyselect:::as_indices_sel_impl(...)
+ 14. |                 \-tidyselect:::as_indices_impl(...)
+ 15. |                   \-tidyselect:::chr_as_locations(x, vars, call = call, arg = arg)
+ 16. |                     \-vctrs::vec_as_location(...)
+ 17. \-vctrs (local) `<fn>`()
+ 18.   \-vctrs:::stop_subscript_oob(...)
+ 19.     \-vctrs:::stop_subscript(...)
+ 20.       \-rlang::abort(...)
+Execution halted
+Loading required package: geosphere
+Loading required package: sp
+Loading required package: raster
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:raster':
+
+    intersect, select, union
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: 'data.table'
+
+The following object is masked from 'package:purrr':
+
+    transpose
+
+The following objects are masked from 'package:dplyr':
+
+    between, first, last
+
+The following object is masked from 'package:raster':
+
+    shift
+
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:data.table':
+
+    yearmon, yearqtr
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric
+
+
+Attaching package: 'lubridate'
+
+The following objects are masked from 'package:data.table':
+
+    hour, isoweek, mday, minute, month, quarter, second, wday, week,
+    yday, year
+
+The following objects are masked from 'package:raster':
+
+    intersect, union
+
+The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union
+
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+removeDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
+There were 50 or more warnings (use warnings() to see the first 50)
+[1] "Limosa limosa limosa"    "Limosa limosa"          
+[3] "Limosa limosa islandica" ""                       
+[5] NA                        "ssp. lmosa"             
+[7] "Limosa lapponica"        "islandica"              
+[9] "Limosa limosa limos"    

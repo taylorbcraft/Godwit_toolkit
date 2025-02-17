@@ -1,6 +1,5 @@
 library(sf)
 library(dplyr)
-library(mapview)
 library(terra)
 
 donana <- read_sf('Donana_flooding/donana_geometry/Donana.shp')

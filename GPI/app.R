@@ -4,7 +4,6 @@ library(leaflet.extras)
 library(sf)
 library(dplyr)
 library(leafgl)
-library(fst)
 library(terra)
 
 ui <- fluidPage(

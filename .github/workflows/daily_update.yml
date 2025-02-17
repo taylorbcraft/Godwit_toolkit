@@ -11,15 +11,15 @@ jobs:
   update-gps-data:
     runs-on: ubuntu-latest
     steps:
-      # step 1: check out your repository
+      # step 1: check out repository
       - name: Check out repo
         uses: actions/checkout@v3
 
-      # step 2: install system dependencies for move package
+      # step 2: install system dependencies for move and sf packages
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev
+          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev
 
       # step 3: set up R
       - name: Set up R
@@ -27,7 +27,8 @@ jobs:
 
       # step 4: install required R packages
       - name: Install R packages
-        run: Rscript -e 'install.packages(c("cronR","sf", "move", "dplyr", "purrr", "data.table", "zoo", "lubridate"), repos="https://cloud.r-project.org")'
+        run: |
+          install.packages(c("sf", "cronR", "move", "dplyr", "purrr", "data.table", "zoo", "lubridate"), repos="https://cloud.r-project.org")
 
       # step 5: run R scripts to update location data
       - name: Run location_data.R

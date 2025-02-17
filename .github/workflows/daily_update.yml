@@ -23,6 +23,15 @@ jobs:
       - name: Install R packages
         run: Rscript -e 'install.packages(c("cronR","move","dplyr","purrr","data.table","zoo","lubridate"), repos="https://cloud.r-project.org")'
 
-      # step 4: run your r script
-      - name: Run location_data.R
+      # step 4: run r scripts
+      - name: Run location_data.R for all tracks
         run: Rscript location_data.R
+        
+      - name: Run filter_location_data.R for Donana
+        run: Rscript Donana/flooding/filter_location_data.R
+
+      - name: Run filter_location_data.R for SWF GPI
+        run: Rscript GPI/filter_location_data.R
+        
+      - name: Run filter_location_data.R for Senegal
+        run: Rscript Senegal_delta/filter_location_data.R

@@ -27,7 +27,7 @@ jobs:
 
       # step 4: install required R packages
       - name: Install R packages
-        run: Rscript -e 'install.packages(c("sf", "cronR", "move", "dplyr", "purrr", "data.table", "zoo", "lubridate"), repos="https://cloud.r-project.org")'
+        run: Rscript -e "install.packages(c('sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate'), repos='https://cloud.r-project.org')"
 
       # step 5: run R scripts to update location data
       - name: Run location_data.R
@@ -44,14 +44,13 @@ jobs:
 
       # step 6: deploy app to shinyapps.io
       - name: Install rsconnect and Deploy to shinyapps.io
-        run: Rscript -e '
-          install.packages("rsconnect", repos="https://cloud.r-project.org");
-          library(rsconnect);
-          rsconnect::setAccountInfo(name = Sys.getenv("SHINYAPPS_ACCOUNT"),
-                                    token = Sys.getenv("SHINYAPPS_TOKEN"),
-                                    secret = Sys.getenv("SHINYAPPS_SECRET"));
-          rsconnect::deployApp(appDir = ".", forceUpdate = TRUE)
-        '
+        run: |
+          Rscript -e "install.packages('rsconnect', repos='https://cloud.r-project.org')"
+          Rscript -e "library(rsconnect);
+                      rsconnect::setAccountInfo(name = Sys.getenv('SHINYAPPS_ACCOUNT'),
+                                                token = Sys.getenv('SHINYAPPS_TOKEN'),
+                                                secret = Sys.getenv('SHINYAPPS_SECRET'));
+                      rsconnect::deployApp(appDir = '.', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

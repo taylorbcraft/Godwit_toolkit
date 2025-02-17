@@ -4,10 +4,8 @@ library(terra)
 
 donana <- read_sf('Donana_flooding/donana_geometry/Donana.shp')
 donana <- st_transform(donana,'EPSG:4326')
-donana <- vect(donana)
-writeVector(donana,'Donana_flooding/donana.gpkg')
 
-locations <- readRDS('allLocations.rds')
+locations <- readRDS('Donana_flooding/allLocations.rds')
 locations <- locations %>%
   mutate(year = format(timestamp, "%Y")) %>%
   filter(year >= "2021")

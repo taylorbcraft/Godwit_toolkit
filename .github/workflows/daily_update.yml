@@ -1,11 +1,11 @@
-name: Daily GPS Update
+name: Daily GPS Update and Deploy to Shinyapps.io
 
 on:
-  # schedule below sets it to run every 3 hours at minute 0 UTC
   schedule:
     - cron: '0 */3 * * *'
-  # uncomment for testing whenever you push:
-  # push:
+  push:
+    branches:
+      - main  # deploy on push to main branch
 
 jobs:
   update-gps-data:
@@ -15,7 +15,7 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v3
 
-      # step 2: set up r
+      # step 2: set up R
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
 
@@ -23,6 +23,29 @@ jobs:
       - name: Install R packages
         run: Rscript -e 'install.packages(c("cronR","move","dplyr","purrr","data.table","zoo","lubridate"), repos="https://cloud.r-project.org")'
 
-      # step 4: run your r script
+      # step 4: run R scripts to update location data
       - name: Run location_data.R
         run: Rscript location_data.R
+        
+      - name: Run filter_location_data.R for Donana
+        run: Rscript Donana/flooding/filter_location_data.R
+
+      - name: Run filter_location_data.R for GPI
+        run: Rscript GPI/filter_location_data.R
+        
+      - name: Run filter_location_data.R for Senegal Delta
+        run: Rscript Senegal_delta/filter_location_data.R
+
+      # step 5: deploy app to shinyapps.io
+      - name: Deploy to shinyapps.io
+        run: |
+          install.packages("rsconnect")
+          library(rsconnect)
+          rsconnect::setAccountInfo(name = Sys.getenv("SHINYAPPS_ACCOUNT"),
+                                    token = Sys.getenv("SHINYAPPS_TOKEN"),
+                                    secret = Sys.getenv("SHINYAPPS_SECRET"))
+          rsconnect::deployApp(appDir = ".", forceUpdate = TRUE)
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}

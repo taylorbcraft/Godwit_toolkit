@@ -14,6 +14,7 @@ locations_sf <- st_as_sf(locations, coords = c("location_long", "location_lat"),
 locations_clipped <- locations_sf %>%
   st_crop(st_bbox(swf))
 
-locations_clipped <- st_intersection(locations_clipped,st_union(swf))
+sf_use_s2(FALSE)
+locations_clipped <- st_intersection(locations_clipped,st_make_valid(st_union(swf)))
 
 saveRDS(locations_clipped,'GPI/locations_swf.rds')

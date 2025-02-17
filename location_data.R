@@ -4,7 +4,6 @@ library(purrr)
 library(data.table)
 library(zoo)
 library(lubridate)
-library(fst)
 
 # Movebank login
 login <- movebankLogin(username = "t.b.craft", password = "GodwitSnl24!!")

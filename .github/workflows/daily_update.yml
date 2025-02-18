@@ -44,15 +44,42 @@ jobs:
       - name: Run filter_location_data.R for Senegal Delta
         run: Rscript Senegal_delta/filter_location_data.R
 
-      # step 6: deploy app to shinyapps.io
-      - name: Install rsconnect and Deploy to shinyapps.io
+      # step 6: deploy each app separately
+      - name: Deploy Donana_flooding app to shinyapps.io
         run: |
           Rscript -e "install.packages('rsconnect', repos='https://cloud.r-project.org')"
           Rscript -e "library(rsconnect);
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',
                                                 secret = '${{ secrets.SHINYAPPS_SECRET }}');
-                      rsconnect::deployApp(appDir = '.', forceUpdate = TRUE, quarto = FALSE)"
+                      rsconnect::deployApp(appDir = 'Donana_flooding', forceUpdate = TRUE, quarto = FALSE)"
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+
+      - name: Deploy GPI app to shinyapps.io
+        run: |
+          Rscript -e "library(rsconnect);
+                      rsconnect::deployApp(appDir = 'GPI', forceUpdate = TRUE, quarto = FALSE)"
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+
+      - name: Deploy Senegal_delta app to shinyapps.io
+        run: |
+          Rscript -e "library(rsconnect);
+                      rsconnect::deployApp(appDir = 'Senegal_delta', forceUpdate = TRUE, quarto = FALSE)"
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+
+      - name: Deploy Summary_stats app to shinyapps.io
+        run: |
+          Rscript -e "library(rsconnect);
+                      rsconnect::deployApp(appDir = 'Summary_stats', forceUpdate = TRUE, quarto = FALSE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

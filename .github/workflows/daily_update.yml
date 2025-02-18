@@ -52,7 +52,7 @@ jobs:
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',
                                                 secret = '${{ secrets.SHINYAPPS_SECRET }}');
-                      rsconnect::deployApp(appDir = 'Donana_flooding', forceUpdate = TRUE, quarto = FALSE)"
+                      rsconnect::deployApp(appDir = 'Donana_flooding', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
@@ -61,7 +61,7 @@ jobs:
       - name: Deploy GPI app to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'GPI', forceUpdate = TRUE, quarto = FALSE)"
+                      rsconnect::deployApp(appDir = 'GPI', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
@@ -70,7 +70,7 @@ jobs:
       - name: Deploy Senegal_delta app to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'Senegal_delta', forceUpdate = TRUE, quarto = FALSE)"
+                      rsconnect::deployApp(appDir = 'Senegal_delta', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
@@ -79,7 +79,7 @@ jobs:
       - name: Deploy Summary_stats app to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'Summary_stats', forceUpdate = TRUE, quarto = FALSE)"
+                      rsconnect::deployApp(appDir = 'Summary_stats', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

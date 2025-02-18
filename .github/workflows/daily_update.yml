@@ -52,7 +52,7 @@ jobs:
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',
                                                 secret = '${{ secrets.SHINYAPPS_SECRET }}');
-                      rsconnect::deployApp(appDir = '.', forceUpdate = TRUE, quarto = NULL)"
+                      rsconnect::deployApp(appDir = '.', forceUpdate = TRUE, quarto = FALSE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

@@ -40,27 +40,25 @@ server <- function(input, output, session) {
     readRDS("locations_donana.rds")
   })
   
-  # update the year selection input based on the data
+  # update the year selection input with default of 2025 if available
   output$year_select <- renderUI({
     req(all_locations())
     years <- unique(format(all_locations()$timestamp, "%Y"))
     years <- sort(years, decreasing = TRUE)
     years <- c(years, "All Years")
-    selectInput("year", "Select Year", choices = years, selected = years[1])
+    # set default year to 2025 if available, otherwise use most recent
+    default_year <- if ("2025" %in% years) "2025" else years[1]
+    selectInput("year", "Select Year", choices = years, selected = default_year)
   })
   
-  # update the month selection input
+  # update the month selection input with default of January for a specific year
   output$month_select <- renderUI({
     req(all_locations(), input$year)
     month_choices <- c("January", "February", "March", "April", "May", "June",
                        "July", "August", "September", "October", "November", "December", "All Months")
-    if (input$year != "All Years") {
-      df_year <- all_locations() %>% filter(format(timestamp, "%Y") == input$year)
-      recent_month <- if(nrow(df_year) > 0) format(max(df_year$timestamp), "%B") else "All Months"
-    } else {
-      recent_month <- "All Months"
-    }
-    selectInput("month", "Select Month", choices = month_choices, selected = recent_month)
+    # if a specific year is selected (not All Years), default to January, else All Months
+    default_month <- if (input$year != "All Years") "January" else "All Months"
+    selectInput("month", "Select Month", choices = month_choices, selected = default_month)
   })
   
   # reactive expression to filter data by selected year and month
@@ -86,11 +84,11 @@ server <- function(input, output, session) {
     r <- projectRasterForLeaflet(r, method = 'bilinear')
     r <- spatSample(r, 100000, method = "regular", as.raster = TRUE)
     
-    # read and mask to Donana geometry if available
+    # read and mask to donana geometry if available
     donana_shp <- "Donana_flooding/donana_geometry/Donana.shp"
     if (file.exists(donana_shp)) {
       donana_geom <- st_read(donana_shp, quiet = TRUE)
-      # reproject Donana geometry to match the raster's CRS
+      # reproject donana geometry to match the raster's crs
       donana_geom <- st_transform(donana_geom, crs = crs(r))
       donana_vect <- vect(donana_geom)
       r <- mask(r, donana_vect)

@@ -47,11 +47,12 @@ jobs:
       # step 6: deploy app to shinyapps.io
       - name: Install rsconnect and Deploy to shinyapps.io
         run: |
+          Rscript -e "install.packages('rsconnect', repos='https://cloud.r-project.org')"
           Rscript -e "library(rsconnect);
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',
                                                 secret = '${{ secrets.SHINYAPPS_SECRET }}');
-                      rsconnect::deployApp(appDir = '.', forceUpdate = TRUE)"
+                      rsconnect::deployApp(appDir = '.', forceUpdate = TRUE, quarto = NULL)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

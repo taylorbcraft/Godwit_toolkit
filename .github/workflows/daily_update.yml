@@ -15,11 +15,13 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v3
 
-      # step 2: install system dependencies for move and sf packages
+      # step 2: install system dependencies for move, sf, and Quarto
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
+          wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto.deb
+          sudo dpkg -i quarto.deb
 
       # step 3: set up R
       - name: Set up R
@@ -27,7 +29,7 @@ jobs:
 
       # step 4: install required R packages
       - name: Install R packages
-        run: Rscript -e "install.packages(c('sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate'), repos='https://cloud.r-project.org')"
+        run: Rscript -e "install.packages(c('rnaturalearthdata','rnaturalearth','shiny','sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect','leaflet','leaflet.extras','leafgl','terra','ggplot2'), repos='https://cloud.r-project.org')"
 
       # step 5: run R scripts to update location data
       - name: Run location_data.R
@@ -42,15 +44,42 @@ jobs:
       - name: Run filter_location_data.R for Senegal Delta
         run: Rscript Senegal_delta/filter_location_data.R
 
-      # step 6: deploy app to shinyapps.io
-      - name: Install rsconnect and Deploy to shinyapps.io
+      # step 6: deploy each app separately
+      - name: Deploy Donana_flooding app to shinyapps.io
         run: |
           Rscript -e "install.packages('rsconnect', repos='https://cloud.r-project.org')"
           Rscript -e "library(rsconnect);
-                      rsconnect::setAccountInfo(name = Sys.getenv('SHINYAPPS_ACCOUNT'),
-                                                token = Sys.getenv('SHINYAPPS_TOKEN'),
-                                                secret = Sys.getenv('SHINYAPPS_SECRET'));
-                      rsconnect::deployApp(appDir = '.', forceUpdate = TRUE)"
+                      rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
+                                                token = '${{ secrets.SHINYAPPS_TOKEN }}',
+                                                secret = '${{ secrets.SHINYAPPS_SECRET }}');
+                      rsconnect::deployApp(appDir = 'Donana_flooding', forceUpdate = TRUE)"
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+
+      - name: Deploy GPI app to shinyapps.io
+        run: |
+          Rscript -e "library(rsconnect);
+                      rsconnect::deployApp(appDir = 'GPI', forceUpdate = TRUE)"
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+
+      - name: Deploy Senegal_delta app to shinyapps.io
+        run: |
+          Rscript -e "library(rsconnect);
+                      rsconnect::deployApp(appDir = 'Senegal_delta', forceUpdate = TRUE)"
+        env:
+          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+
+      - name: Deploy Summary_stats app to shinyapps.io
+        run: |
+          Rscript -e "library(rsconnect);
+                      rsconnect::deployApp(appDir = 'Summary_stats', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

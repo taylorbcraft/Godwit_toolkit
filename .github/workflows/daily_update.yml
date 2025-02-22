@@ -1,8 +1,8 @@
 name: Daily GPS Update and Deploy to Shinyapps.io
 
 on:
-  schedule:
-    - cron: '0 */3 * * *'  # Runs every 3 hours
+schedule:
+  - cron: '0 0 * * 1'  # Runs every Monday at midnight UTC
   push:
     branches:
       - main  # Deploy on push to main branch

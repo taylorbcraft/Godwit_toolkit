@@ -9,7 +9,8 @@ on:
 
 jobs:
   update-gps-data:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04  # Use stable OS
+
     steps:
       # step 1: check out repository
       - name: Check out repo
@@ -23,28 +24,40 @@ jobs:
           wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto.deb
           sudo dpkg -i quarto.deb
 
-      # step 3: set up R
+      # step 3: set up latest supported R version from ShinyApps.io
       - name: Set up R
-        uses: r-lib/actions/setup-r@v2
+        run: |
+          # Get latest supported R version from ShinyApps.io
+          SUPPORTED_R=$(Rscript -e 'versions <- rsconnect::showVersions("shinyapps.io"); cat(max(versions$r_version))')
 
-      # step 4: install required R packages
+          echo "Using R version $SUPPORTED_R"
+          
+          # Install the supported R version
+          sudo apt-get update
+          sudo apt-get install -y r-base=$SUPPORTED_R-1
+
+      # step 4: install required R packages dynamically
       - name: Install R packages
         run: Rscript -e "install.packages(c('rnaturalearthdata','rnaturalearth','shiny','sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect','leaflet','leaflet.extras','leafgl','terra','ggplot2'), repos='https://cloud.r-project.org')"
 
       # step 5: run R scripts to update location data
       - name: Run location_data.R
         run: Rscript location_data.R
-        
+
       - name: Run filter_location_data.R for Donana
         run: Rscript Donana_flooding/filter_location_data.R
 
       - name: Run filter_location_data.R for GPI
         run: Rscript GPI/filter_location_data.R
-        
+
       - name: Run filter_location_data.R for Senegal Delta
         run: Rscript Senegal_delta/filter_location_data.R
 
-      # step 6: deploy each app separately
+      # step 6: check R environment before deployment
+      - name: Check R environment
+        run: Rscript -e "sessionInfo()"
+
+      # step 7: deploy each app separately
       - name: Deploy Donana_flooding app to shinyapps.io
         run: |
           Rscript -e "install.packages('rsconnect', repos='https://cloud.r-project.org')"

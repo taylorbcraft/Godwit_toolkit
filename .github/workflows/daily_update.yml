@@ -46,7 +46,10 @@ jobs:
 
       # step 4: install required R packages dynamically
       - name: Install R packages
-        run: Rscript -e "install.packages(c('rnaturalearthdata','rnaturalearth','shiny','sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect','leaflet','leaflet.extras','leafgl','terra','ggplot2'), repos='https://cloud.r-project.org')"
+        run: |
+          mkdir -p ~/R/library
+          echo 'R_LIBS_USER="~/R/library"' >> ~/.Renviron
+          Rscript -e "install.packages(c('rnaturalearthdata','rnaturalearth','shiny','sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect','leaflet','leaflet.extras','leafgl','terra','ggplot2'), repos='https://cloud.r-project.org', lib='~/R/library')"
 
       # step 5: run R scripts to update location data
       - name: Run location_data.R

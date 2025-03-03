@@ -24,13 +24,20 @@ jobs:
           wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto.deb
           sudo dpkg -i quarto.deb
 
-      # step 3: install R from CRAN
+      # step 3: install R from CRAN with correct GPG key
       - name: Install latest R version from CRAN
         run: |
-          # Add CRAN repo and install latest R
+          # Add CRAN GPG key manually
           sudo apt-get update
           sudo apt-get install -y software-properties-common
-          sudo add-apt-repository -y "deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/"
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee /etc/apt/keyrings/cran-apt-key.asc > /dev/null
+          sudo chmod 644 /etc/apt/keyrings/cran-apt-key.asc
+
+          # Add CRAN repo correctly with signed key
+          echo "deb [signed-by=/etc/apt/keyrings/cran-apt-key.asc] https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" | sudo tee -a /etc/apt/sources.list.d/cran.list
+
+          # Update and install latest R
           sudo apt-get update
           sudo apt-get install -y r-base
 

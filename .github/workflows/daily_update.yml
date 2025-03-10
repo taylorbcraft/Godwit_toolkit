@@ -2,21 +2,24 @@ name: Weekly GPS Update and Deploy to Shinyapps.io
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # Runs once a week, every Monday at midnight UTC
+    - cron: '0 0 * * 1'  # runs once a week, every monday at midnight utc
   push:
     branches:
-      - main  # Deploy on push to main branch
+      - main  # deploy on push to main branch
 
 jobs:
   update-gps-data:
-    runs-on: ubuntu-20.04  # Use stable OS
+    runs-on: ubuntu-20.04
 
     steps:
-      # step 1: check out repository
       - name: Check out repo
         uses: actions/checkout@v3
 
-      # step 2: install system dependencies for move, sf, and Quarto
+      - name: Set up R 4.4.2
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -24,34 +27,16 @@ jobs:
           wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto.deb
           sudo dpkg -i quarto.deb
 
-      # step 3: install R from CRAN with correct GPG key
-      - name: Install latest R version from CRAN
-        run: |
-          # Add CRAN GPG key manually
-          sudo apt-get update
-          sudo apt-get install -y software-properties-common
-          sudo mkdir -p /etc/apt/keyrings
-          curl -fsSL https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee /etc/apt/keyrings/cran-apt-key.asc > /dev/null
-          sudo chmod 644 /etc/apt/keyrings/cran-apt-key.asc
-
-          # Add CRAN repo correctly with signed key
-          echo "deb [signed-by=/etc/apt/keyrings/cran-apt-key.asc] https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" | sudo tee -a /etc/apt/sources.list.d/cran.list
-
-          # Update and install latest R
-          sudo apt-get update
-          sudo apt-get install -y r-base
-
-          # Verify R installation
-          R --version
-
-      # step 4: install required R packages dynamically
       - name: Install R packages
         run: |
           mkdir -p ~/R/library
           echo 'R_LIBS_USER="~/R/library"' >> ~/.Renviron
-          Rscript -e "install.packages(c('rnaturalearthdata','rnaturalearth','shiny','sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect','leaflet','leaflet.extras','leafgl','terra','ggplot2'), repos='https://cloud.r-project.org', lib='~/R/library')"
+          Rscript -e "install.packages(c(
+            'rnaturalearthdata', 'rnaturalearth', 'shiny', 'sf', 'cronR', 'move', 'dplyr',
+            'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect',
+            'leaflet', 'leaflet.extras', 'leafgl', 'terra', 'ggplot2'),
+            repos='https://cloud.r-project.org', lib='~/R/library')"
 
-      # step 5: run R scripts to update location data
       - name: Run location_data.R
         run: Rscript location_data.R
 
@@ -64,11 +49,9 @@ jobs:
       - name: Run filter_location_data.R for Senegal Delta
         run: Rscript Senegal_delta/filter_location_data.R
 
-      # step 6: check R environment before deployment
       - name: Check R environment
         run: Rscript -e "sessionInfo()"
 
-      # step 7: deploy each app separately
       - name: Deploy Donana_flooding app to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);

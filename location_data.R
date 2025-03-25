@@ -5,10 +5,10 @@ library(data.table)
 library(zoo)
 library(lubridate)
 
-# Movebank login
+# movebank login
 login <- movebankLogin(username = "t.b.craft", password = "GodwitSnl24!!")
 
-# Study IDs and names
+# study IDs and names
 study_ids <- list(
   ib19 = 652989041, microwave2021 = 1498143083, extremadura2022 = 1923591036, 
   extremadura2023 = 2638950465, southholland2021 = 1145538280, BtgTagus2021 = 1693518103, 
@@ -23,53 +23,49 @@ study_ids <- list(
   VeenVitaal2023 = 2749104371
 )
 
-# Function to get location data
+# function to get location data
 get_data <- function(study_id) {
   location_data <- as.data.frame(getMovebankData(study = study_id, login = login, removeDuplicatedTimestamps = TRUE))
 }
 
-all_study_data <- map(study_ids, get_data)
+all_study_data <- map(unname(study_ids), get_data)
 
-
-# Ensure all `ring_id` columns are of the same type (character)
+# change cols to characters so they can merge
 all_study_data <- lapply(all_study_data, function(df) {
   df$ring_id <- as.character(df$ring_id)
   return(df)
 })
 
-# Ensure all `tag_local_identifier` columns are of the same type (character)
 all_study_data <- lapply(all_study_data, function(df) {
   df$tag_local_identifier <- as.character(df$tag_local_identifier)
   return(df)
 })
 
-# Ensure all `comments` columns are of the same type (character)
 all_study_data <- lapply(all_study_data, function(df) {
   df$comments <- as.character(df$comments)
   return(df)
 })
 
-# Ensure all `mortality_status` columns exist and are of the same type (character)
 all_study_data <- lapply(all_study_data, function(df) {
-  # Check if `mortality_status` exists; if not, create it as a character column
+  # check if `mortality_status` exists; if not, create it as a character column
   if (!"mortality_status" %in% names(df)) {
-    df$mortality_status <- NA_character_  # Create as NA if not present
+    df$mortality_status <- NA_character_  # create as NA if not present
   } else {
-    df$mortality_status <- as.character(df$mortality_status)  # Convert to character
+    df$mortality_status <- as.character(df$mortality_status) 
   }
   return(df)
 })
 
-# Now combine the data frames into one
+# combine the data frames into one
 combined_data <- bind_rows(all_study_data)
 
 
-# Keep only limosa limosa subspecies
+# keep only limosa limosa subspecies
 unique(combined_data$taxon_detail)
 combined_data <- combined_data[combined_data$taxon_detail %in% c("Limosa limosa limosa", NA, "Limosa limosa limos", "ssp. lmosa"), ]
 
 
-# Remove outliers
+# remove outliers
 combined_data_filter <- combined_data %>%
   group_by(trackId) %>%
   arrange(trackId, timestamp) %>%
@@ -85,29 +81,72 @@ combined_data_filter <- combined_data %>%
   distinct()
 
 combined_data_filter <- combined_data_filter %>%
-  filter(is.na(argos_lc) | !(argos_lc %in% c("A", "B", "C", "Z"))) # Remove low quality Argos locations
+  filter(is.na(argos_lc) | !(argos_lc %in% c("A", "B", "C", "Z"))) # remove low quality Argos locations
 
 combined_data_filter <- combined_data_filter %>%
-  filter(is.na(argos_lc) | (argos_lc %in% c("1","2","3"))) # Remove low quality Argos locations
+  filter(is.na(argos_lc) | (argos_lc %in% c("1","2","3"))) # remove low quality Argos locations
 
 combined_data_filter <- combined_data_filter %>%
-  filter(is.na(ground_speed) | ground_speed < 1)
+  filter(is.na(ground_speed) | ground_speed < 1) # remove in flight locs
 
 combined_data_filter <- combined_data_filter %>%
-  filter(is.na(argos_altitude) | argos_altitude < 100)
+  filter(is.na(argos_altitude) | argos_altitude < 100) # remove in flight locs
 
-combined_data_filter_5 <- combined_data_filter %>%
+# round to nearest hour and remove duplicates
+combined_data_filter <- combined_data_filter %>%
+  mutate(timestamp = round_date(timestamp, unit = "hour"))
+
+# remove duplicate timestamps per trackId
+combined_data_filter <- combined_data_filter %>%
+  distinct(trackId, timestamp, .keep_all = TRUE)
+
+# keep only 6 locs/day
+combined_data_filter_6 <- combined_data_filter %>%
   mutate(date = as.Date(timestamp)) %>%
   group_by(trackId, date) %>%
-  slice_head(n = 5) %>%
+  slice_head(n = 6) %>%
   ungroup() %>%
   dplyr::select(-date)
 
-# Keep only desired columns
-allLocations <- combined_data_filter_5 %>% 
-  dplyr::select(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor)
+#### get tagging site ####
+library(dplyr)
+library(geosphere)
+library(rnaturalearth)
+library(sf)
 
-# Save
+# convert lat/lon to sf points
+combined_data_sf <- combined_data_filter_6 %>%
+  st_as_sf(coords = c("location_long", "location_lat"), crs = 4326, remove = FALSE)
+
+# get country polygons
+world <- st_make_valid(ne_countries(scale = "large", returnclass = "sf"))
+
+# find country per point
+combined_data_sf <- st_join(combined_data_sf, world["iso_a2"])
+
+# extract country of first location per trackId
+tag_site_lookup <- combined_data_sf %>%
+  arrange(trackId, timestamp) %>%
+  group_by(trackId) %>%
+  slice(1) %>%
+  ungroup() %>%
+  select(trackId, tag_site = iso_a2)
+
+tag_site_lookup <- tag_site_lookup %>%
+  mutate(tag_site = ifelse(tag_site %in% c("NL", "DE", "PT", "ES", "PL"), tag_site, NA))
+
+
+# join back to full dataset
+combined_data_with_tag_site <- combined_data_filter_6 %>%
+  left_join(tag_site_lookup, by = "trackId")
+
+combined_data_with_tag_site$tag_site <- as.factor(combined_data_with_tag_site$tag_site)
+
+# keep only desired columns
+allLocations <- combined_data_with_tag_site %>% 
+  dplyr::select(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor,tag_site)
+
+# export to respective directory
 saveRDS(allLocations, "Donana_flooding/allLocations.rds")
 saveRDS(allLocations, "GPI/allLocations.rds")
 saveRDS(allLocations, "Senegal_delta/allLocations.rds")

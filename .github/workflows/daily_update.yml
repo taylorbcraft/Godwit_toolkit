@@ -1,21 +1,25 @@
-name: Daily GPS Update and Deploy to Shinyapps.io
+name: Weekly GPS Update and Deploy to Shinyapps.io
 
 on:
   schedule:
-    - cron: '0 */3 * * *'  # Runs every 3 hours
+    - cron: '0 0 * * 1'  # runs once a week, every monday at midnight utc
   push:
     branches:
-      - main  # Deploy on push to main branch
+      - main  # deploy on push to main branch
 
 jobs:
   update-gps-data:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+
     steps:
-      # step 1: check out repository
       - name: Check out repo
         uses: actions/checkout@v3
 
-      # step 2: install system dependencies for move, sf, and Quarto
+      - name: Set up R 4.4.2
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -23,31 +27,33 @@ jobs:
           wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto.deb
           sudo dpkg -i quarto.deb
 
-      # step 3: set up R
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
-
-      # step 4: install required R packages
       - name: Install R packages
-        run: Rscript -e "install.packages(c('rnaturalearthdata','rnaturalearth','shiny','sf', 'cronR', 'move', 'dplyr', 'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect','leaflet','leaflet.extras','leafgl','terra','ggplot2'), repos='https://cloud.r-project.org')"
+        run: |
+          mkdir -p ~/R/library
+          echo 'R_LIBS_USER="~/R/library"' >> ~/.Renviron
+          Rscript -e "install.packages(c(
+            'rnaturalearthdata', 'rnaturalearth', 'shiny', 'sf', 'cronR', 'move', 'dplyr',
+            'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect',
+            'leaflet', 'leaflet.extras', 'leafgl', 'terra', 'ggplot2'),
+            repos='https://cloud.r-project.org', lib='~/R/library')"
 
-      # step 5: run R scripts to update location data
       - name: Run location_data.R
         run: Rscript location_data.R
-        
+
       - name: Run filter_location_data.R for Donana
         run: Rscript Donana_flooding/filter_location_data.R
 
       - name: Run filter_location_data.R for GPI
         run: Rscript GPI/filter_location_data.R
-        
+
       - name: Run filter_location_data.R for Senegal Delta
         run: Rscript Senegal_delta/filter_location_data.R
 
-      # step 6: deploy each app separately
+      - name: Check R environment
+        run: Rscript -e "sessionInfo()"
+
       - name: Deploy Donana_flooding app to shinyapps.io
         run: |
-          Rscript -e "install.packages('rsconnect', repos='https://cloud.r-project.org')"
           Rscript -e "library(rsconnect);
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',

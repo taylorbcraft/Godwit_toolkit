@@ -146,7 +146,7 @@ combined_data_with_tag_site$tag_site <- as.factor(combined_data_with_tag_site$ta
 allLocations <- combined_data_with_tag_site %>% 
   dplyr::select(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor,tag_site)
 
-# export to respective directory
+#### export to respective directory #### 
 saveRDS(allLocations, "Donana_flooding/allLocations.rds")
 saveRDS(allLocations, "GPI/allLocations.rds")
 saveRDS(allLocations, "Senegal_delta/allLocations.rds")

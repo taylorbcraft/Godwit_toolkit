@@ -1,0 +1,190 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 // Surface water monitoring GEE app code // \
+/*\
+ * Landsat SWIR Composite for flood mapping\
+ * \
+ * This app allows users to generate a median composite of Landsat images\
+ * for a selected month and year by clicking on the map. The app:\
+ * - Allows users to select a point on the map, creating a 50km buffer AOI.\
+ * - Processes Landsat 7, 8, and 9 images within the AOI and date range.\
+ * - Applies cloud masking and scaling factors.\
+ * - Displays the composite as a map layer.\
+ * - Generates a downloadable link for exporting the image.\
+ */\
+\
+// define helper functions\
+\
+// rename landsat 7 bands to match landsat 8/9 naming convention\
+function rename(image) \{\
+  return image.select(\
+    ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7', 'QA_PIXEL'],\
+    ['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7', 'QA_PIXEL']);\
+\}\
+\
+// convert image to 32-bit float\
+var float = function(image) \{\
+  return image.toFloat();\
+\};\
+\
+// apply scaling factors for optical and thermal bands\
+function applyScaleFactors(image) \{\
+  var opticalBands = image.select('SR_B.')\
+    .multiply(0.0000275)\
+    .add(-0.2);\
+  var thermalBands = image.select('ST_B.*')\
+    .multiply(0.00341802)\
+    .add(149.0);\
+  return image.addBands(opticalBands, null, true)\
+    .addBands(thermalBands, null, true);\
+\}\
+\
+// cloud mask function: remove clouds and cloud shadows\
+function cloudMask(image) \{\
+  var cloudShadowBitMask = (1 << 3);\
+  var cloudsBitMask = (1 << 5);\
+  var qa = image.select('QA_PIXEL');\
+  var mask = qa.bitwiseAnd(cloudShadowBitMask).eq(0)\
+     .and(qa.bitwiseAnd(cloudsBitMask).eq(0));\
+  return image.updateMask(mask);\
+\}\
+\
+var selectedPoint = null;\
+var aoi = null;\
+var pointLayer = ui.Map.Layer(null, \{color: 'red'\}, 'selected point');\
+var aoiLayer = ui.Map.Layer(null, \{color: 'black', width: 2\}, 'AOI');\
+Map.layers().add(pointLayer);\
+Map.layers().add(aoiLayer);\
+\
+Map.setCenter(0, 0, 2);\
+print('Click on the map to select a point. The app will create a 50km AOI around it.');\
+\
+// Change cursor style to crosshair for better indication of point selection\
+Map.style().set('cursor', 'crosshair');\
+\
+Map.onClick(function(coords) \{\
+  selectedPoint = ee.Geometry.Point(coords.lon, coords.lat);\
+  aoi = selectedPoint.buffer(50000).bounds();\
+  pointLayer.setEeObject(selectedPoint);\
+  aoiLayer.setEeObject(aoi);\
+  print('Selected point:', selectedPoint);\
+  print('AOI:', aoi);\
+\});\
+\
+var composite = null;\
+\
+function runComposite() \{\
+  if (!selectedPoint || !aoi) \{\
+    print('Please select a point on the map');\
+    return;\
+  \}\
+  var year = Number(yearInput.getValue());\
+  var month = Number(monthSelect.getValue());\
+  if (!year || !month) \{\
+    print('Please enter a valid year and select a month');\
+    return;\
+  \}\
+  \
+  var startDate = ee.Date.fromYMD(year, month, 1);\
+  var lastDay = new Date(year, month, 0).getDate();\
+  var endDate = ee.Date.fromYMD(year, month, lastDay);\
+  \
+  var l7 = ee.ImageCollection('LANDSAT/LE07/C02/T1_L2')\
+    .filterBounds(aoi)\
+    .filterDate(startDate, endDate)\
+    .map(cloudMask)\
+    .map(applyScaleFactors)\
+    .map(rename)\
+    .select('SR_B6')\
+    .map(float);\
+  \
+  var l8 = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2')\
+    .filterBounds(aoi)\
+    .filterDate(startDate, endDate)\
+    .map(applyScaleFactors)\
+    .map(cloudMask)\
+    .select('SR_B6');\
+  \
+  var l9 = ee.ImageCollection('LANDSAT/LC09/C02/T1_L2')\
+    .filterBounds(aoi)\
+    .filterDate(startDate, endDate)\
+    .map(applyScaleFactors)\
+    .map(cloudMask)\
+    .select('SR_B6');\
+  \
+  var merged = l7.merge(l8).merge(l9);\
+  composite = merged.reduce(ee.Reducer.median()).clip(aoi);\
+  \
+  var vizParams = \{\
+    bands: ['SR_B6_median'],\
+    min: -0.08,\
+    max: 1.5,\
+    palette: ['darkblue','aqua','grey']\
+  \};\
+  Map.addLayer(composite, vizParams, 'Composite ' + year + '-' + month);\
+  print('Composite for ' + year + '-' + month, composite);\
+\}\
+\
+function exportImage() \{\
+  if (!composite) \{\
+    print('Please run the composite first before exporting');\
+    return;\
+  \}\
+  \
+  composite.getDownloadURL(\{\
+    scale: 30,\
+    region: aoi,\
+    format: 'GeoTIFF'\
+  \}, function(url) \{\
+    print('Download your image here:', url);\
+    var link = ui.Label(\{\
+      value: 'Download your image here',\
+      style: \{color: 'blue'\},\
+      targetUrl: url\
+    \});\
+    panel.add(link);\
+  \});\
+\}\
+\
+var panel = ui.Panel(\{\
+  style: \{width: '300px', padding: '8px'\}\
+\});\
+panel.add(ui.Label(\{value: 'Landsat Composite App', style: \{fontWeight: 'bold', fontSize: '16px'\}\}));\
+panel.add(ui.Label('This app generates a 1-month Landsat SWIR composite for surface water monitoring. A 50km buffer is created around a user-defined point to define the area of interest (AOI). A median composite of Landsat 7, 8, and 9 imagery captured over the AOI is displayed and made available for download.'));\
+panel.add(ui.Label('Select a point on the map to generate a composite.'));\
+\
+var yearInput = ui.Textbox(\{\
+  placeholder: 'e.g. 2025',\
+  value: '2025',\
+  style: \{stretch: 'horizontal'\}\
+\});\
+panel.add(ui.Label('Year:'));\
+panel.add(yearInput);\
+\
+var monthSelect = ui.Select(\{\
+  items: ['1','2','3','4','5','6','7','8','9','10','11','12'],\
+  value: '1',\
+  style: \{stretch: 'horizontal'\}\
+\});\
+panel.add(ui.Label('Month:'));\
+panel.add(monthSelect);\
+\
+var runButton = ui.Button(\{\
+  label: 'Run Composite',\
+  onClick: runComposite\
+\});\
+panel.add(runButton);\
+\
+var exportButton = ui.Button(\{\
+  label: 'Export Image',\
+  onClick: exportImage\
+\});\
+panel.add(exportButton);\
+\
+ui.root.insert(0, panel);\
+}

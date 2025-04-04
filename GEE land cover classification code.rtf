@@ -1,0 +1,176 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 /***********************************************\
+ * LAND COVER CLASSIFICATION SCRIPT FOR GEE AMATEURS\
+ *\
+ * this script loads landsat 9 imagery, masks clouds,\
+ * creates a composite image, and then uses user-provided \
+ * training points to classify land cover. the result \
+ * can be exported to your google drive.\
+ *\
+ * instructions:\
+ * 1. define your area of interest (aoi) below or draw one.\
+ * 2. use the drawing tools in the code editor to create training points.\
+ *    - each training point must have a property named "land_cover"\
+ *      that indicates the land cover type (e.g., 1 = water, 2 = forest, etc.).\
+ * 3. after drawing your points, click "Import" to add them to your script.\
+ * 4. click the gear icon next to each imported geometry and change "Import as"\
+ *    from "Geometry" to "FeatureCollection". Optionally, rename them (e.g., water, grass).\
+ * 5. merge your separate FeatureCollections into one called "trainingPoints".\
+ * 6. run the script to see your composite image and classification.\
+ * 7. check the console for accuracy results.\
+ * 8. export the classified image to your drive.\
+ ***********************************************/\
+\
+// -------------------------------\
+// SECTION 1: SETUP & DATA LOADING\
+// -------------------------------\
+\
+var aoi = ee.Geometry.Polygon(\
+  [[[5.2, 53.10],\
+    [5.2, 52.80],\
+    [5.6, 52.80],\
+    [5.6, 53.10]]]);\
+\
+Map.centerObject(aoi, 10);\
+\
+var landsat9 = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2")\
+  .filterBounds(aoi)\
+  .filterDate('2022-10-01', '2022-11-30');\
+\
+\
+// ---------------------------------------\
+// SECTION 2: CLOUD MASKING FUNCTION\
+// ---------------------------------------\
+var maskL9 = function(image) \{\
+  var qaMask = image.select('QA_PIXEL')\
+                    .bitwiseAnd(parseInt('11111', 2))\
+                    .eq(0);\
+                    \
+  var saturationMask = image.select('QA_RADSAT').eq(0);\
+  \
+  var opticalBands = image.select('SR_B.')\
+                          .multiply(0.0000275)\
+                          .add(-0.2);\
+                          \
+  var thermalBands = image.select('ST_B.*')\
+                          .multiply(0.00341802)\
+                          .add(149.0);\
+                          \
+  return image.addBands(opticalBands, null, true)\
+              .addBands(thermalBands, null, true)\
+              .updateMask(qaMask);\
+\};\
+\
+landsat9 = landsat9.map(maskL9);\
+\
+\
+// ---------------------------------------\
+// SECTION 3: CREATE A COMPOSITE IMAGE\
+// ---------------------------------------\
+var composite = landsat9.median().clip(aoi);\
+\
+Map.addLayer(composite, \
+             \{bands: ['SR_B4', 'SR_B3', 'SR_B2'], min: 0, max: 0.3\}, \
+             'landsat9 composite');\
+\
+\
+// ----------------------------------------------------------\
+// SECTION 4: CREATE YOUR TRAINING DATA (INTERACTIVE STEP)\
+var water = ee.FeatureCollection([\
+  ee.Feature(ee.Geometry.Point([5.2, 53.00]), \{'land_cover': 1\}),\
+  ee.Feature(ee.Geometry.Point([5.25, 52.97]), \{'land_cover': 1\})\
+]);\
+\
+var grass = ee.FeatureCollection([\
+  ee.Feature(ee.Geometry.Point([5.35, 52.90]), \{'land_cover': 2\}),\
+  ee.Feature(ee.Geometry.Point([5.4, 52.85]), \{'land_cover': 2\})\
+]);\
+\
+var urban = ee.FeatureCollection([\
+  ee.Feature(ee.Geometry.Point([5.15, 53.08]), \{'land_cover': 3\}),\
+  ee.Feature(ee.Geometry.Point([5.2, 53.06]), \{'land_cover': 3\})\
+]);\
+\
+var forest = ee.FeatureCollection([\
+  ee.Feature(ee.Geometry.Point([5.45, 53.09]), \{'land_cover': 4\}),\
+  ee.Feature(ee.Geometry.Point([5.5, 53.07]), \{'land_cover': 4\})\
+]);\
+\
+var trainingPoints = water.merge(grass).merge(urban).merge(forest);\
+\
+print('Merged training points:', trainingPoints);\
+\
+\
+// -----------------------------------------------------------\
+// SECTION 5: SAMPLE IMAGE DATA AT TRAINING POINT LOCATIONS\
+// -----------------------------------------------------------\
+var trainingData = composite.sampleRegions(\{\
+  collection: trainingPoints,\
+  properties: ['land_cover'],\
+  scale: 30,\
+  tileScale: 2\
+\});\
+\
+\
+// -----------------------------------------------------------\
+// SECTION 6: TRAIN THE CLASSIFIER\
+// -----------------------------------------------------------\
+var classifier = ee.Classifier.smileRandomForest(50)\
+  .train(\{\
+    features: trainingData,\
+    classProperty: 'land_cover'\
+  \});\
+\
+\
+// -----------------------------------------------------------\
+// SECTION 7: APPLY THE CLASSIFIER TO THE COMPOSITE IMAGE\
+// -----------------------------------------------------------\
+var classified = composite.classify(classifier);\
+\
+var visParams = \{\
+  min: 1,\
+  max: 4,\
+  palette: ['blue', 'green', 'gray', 'darkgreen']\
+\};\
+\
+Map.addLayer(classified.clip(aoi), visParams, 'land cover classification');\
+\
+\
+// -----------------------------------------------------------\
+// SECTION 8: ACCURACY ASSESSMENT (OPTIONAL)\
+// -----------------------------------------------------------\
+var withRandom = trainingPoints.randomColumn('random');\
+\
+var trainSet = withRandom.filter(ee.Filter.lt('random', 0.7));\
+var validationSet = withRandom.filter(ee.Filter.gte('random', 0.7));\
+\
+var validationSamples = classified.sampleRegions(\{\
+  collection: validationSet,\
+  properties: ['land_cover'],\
+  scale: 30,\
+  tileScale: 2\
+\});\
+\
+var confusionMatrix = validationSamples.errorMatrix('land_cover', 'classification');\
+print('Confusion matrix:', confusionMatrix);\
+print('Overall accuracy:', confusionMatrix.accuracy());\
+\
+\
+// -----------------------------------------------------------\
+// SECTION 9: EXPORT THE CLASSIFIED IMAGE TO YOUR DRIVE\
+// -----------------------------------------------------------\
+Export.image.toDrive(\{\
+  image: classified,\
+  description: 'land_cover_classification',\
+  folder: 'gee_exports',\
+  scale: 30,\
+  maxPixels: 1e9,\
+  region: aoi\
+\});\
+}

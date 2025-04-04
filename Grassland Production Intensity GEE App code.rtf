@@ -1,0 +1,266 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 //Grassland Production Intensity GEE App code//\
+\
+/**** SETUP ****/\
+// Center roughly on Europe at zoom level 4\
+Map.setCenter(10 /* lon */, 50 /* lat */, 4);\
+\
+// No AOI until user draws it\
+var roi = null;\
+var selectedImage = null;\
+var clipPolygon = null;  // Stores user-drawn clipping polygon\
+\
+// Store the user-chosen year and month in these variables\
+var chosenYear = null;\
+var chosenMonth = null;\
+\
+// Sentinel-2 SR collection (2016 - mid-2022+)\
+var s2Sr = ee.ImageCollection('COPERNICUS/S2_SR');\
+\
+// Visualization for RGB display\
+var viz = \{\
+  min: 0,\
+  max: 3000,\
+  bands: ['B4','B3','B2']\
+\};\
+\
+// Visualization for GPI\
+var gpiViz = \{min: 708, max: 741, palette: ['yellow', 'green', 'grey']\};\
+\
+/**** GPI CALCULATION FUNCTION ****/\
+function calculateGPI(image) \{\
+  var B4 = image.select('B4');\
+  var B5 = image.select('B5');\
+  var B6 = image.select('B6');\
+  var B7 = image.select('B7');\
+\
+  var rep = ee.Image(705).add(\
+    ee.Image(35).multiply(\
+      ee.Image(B7).add(B4).divide(2).subtract(B5)\
+    ).divide(\
+      ee.Image(B6).subtract(B5)\
+    )\
+  );\
+\
+  return image.addBands(rep.rename('GPI'));\
+\}\
+\
+/**** UI PANEL ****/\
+\
+// Main panel\
+var panel = ui.Panel(\{style: \{width: '300px'\}\});\
+ui.root.insert(0, panel);\
+\
+// Instruction message (removed after date & AOI selection)\
+var instructionLabel = ui.Label(\{\
+  value: 'Follow the instructions below to directly download a GPI (Grassland Production Intensity) raster image in a custom AOI (Area of Interest)',\
+  style: \{fontSize: '14px'\}\
+\});\
+panel.add(instructionLabel);\
+\
+var instructionLabel2 = ui.Label(\{\
+  value: '1.) Add a placemarker on AOI',\
+  style: \{fontSize: '14px', fontWeight: 'bold'\}\
+\});\
+panel.add(instructionLabel2);\
+\
+// Drawing Tools for AOI selection (Point only)\
+var drawingTools = Map.drawingTools();\
+drawingTools.setShown(true);\
+drawingTools.setDrawModes(['point']); // Restrict to points only\
+\
+// Listen for AOI selection (removes previous AOI if new one is drawn)\
+drawingTools.onDraw(function(newGeom) \{\
+  drawingTools.layers().reset(); // Remove previous AOI\
+\
+  // Keep the new AOI on the map\
+  roi = newGeom;\
+  var roiLayer = ui.Map.Layer(roi, \{color: 'red'\}, 'Selected AOI');\
+  Map.layers().set(0, roiLayer); // Ensures it stays visible\
+\
+  checkSelectionReady();\
+\});\
+\
+// Panel to hold thumbnails\
+var thumbsPanel = ui.Panel();\
+panel.add(thumbsPanel);\
+\
+// Label prompting user to draw clipping boundary\
+var clipPrompt = ui.Label(\{\
+  value: 'Draw a polygon to clip the image',\
+  style: \{fontWeight: 'bold', fontSize: '14px', color: 'black'\}\
+\});\
+clipPrompt.style().set('shown', false); // Hidden until needed\
+\
+// "Download" button (Initially Hidden)\
+var downloadButton = ui.Button(\{\
+  label: 'Download Clipped Image',\
+  onClick: function() \{\
+    processAndDownload(selectedImage);\
+  \}\
+\});\
+downloadButton.style().set('shown', false); // Hide button initially\
+\
+// Download link label\
+var downloadLinkLabel = ui.Label(''); // Will show the actual download link\
+downloadLinkLabel.style().set('shown', false);\
+\
+// "Go Back" button to return to thumbnails\
+var goBackButton = ui.Button(\{\
+  label: 'Go Back',\
+  onClick: function() \{\
+    updateThumbnails(chosenYear, chosenMonth);\
+  \}\
+\});\
+goBackButton.style().set('shown', false); // Initially hidden\
+\
+/**** YEAR & MONTH SELECTORS ****/\
+var years = [];\
+for (var y = 2016; y <= 2025; y++) \{\
+  years.push(y.toString());\
+\}\
+\
+var months = [\
+  \{label: 'January', value: '01'\},\
+  \{label: 'February', value: '02'\},\
+  \{label: 'March', value: '03'\},\
+  \{label: 'April', value: '04'\},\
+  \{label: 'May', value: '05'\},\
+  \{label: 'June', value: '06'\},\
+  \{label: 'July', value: '07'\},\
+  \{label: 'August', value: '08'\},\
+  \{label: 'September', value: '09'\},\
+  \{label: 'October', value: '10'\},\
+  \{label: 'November', value: '11'\},\
+  \{label: 'December', value: '12'\}\
+];\
+\
+// Year selection\
+var yearSelect = ui.Select(\{\
+  items: years,\
+  placeholder: 'Choose Year',\
+  style: \{width: '120px'\},\
+  onChange: function(val) \{\
+    chosenYear = val;\
+    checkSelectionReady();\
+  \}\
+\});\
+panel.add(ui.Label(\{\
+  value: '2.) Select Year:', \
+  style: \{fontSize: '14px', fontWeight: 'bold'\}\}));\
+panel.add(yearSelect);\
+\
+// Month selection\
+var monthSelect = ui.Select(\{\
+  items: months.map(function(m) \{ return m.label; \}),\
+  placeholder: 'Choose Month',\
+  style: \{width: '120px'\},\
+  onChange: function(val) \{\
+    chosenMonth = months[monthSelect.items().indexOf(val)].value;\
+    checkSelectionReady();\
+  \}\
+\});\
+panel.add(ui.Label(\{\
+  value: '3.) Select Month:',\
+  style: \{fontSize: '14px', fontWeight: 'bold'\}\}));\
+panel.add(monthSelect);\
+\
+/**** CHECK IF BOTH DATE & AOI ARE SELECTED BEFORE FETCHING IMAGES ****/\
+function checkSelectionReady() \{\
+  if (chosenYear && chosenMonth && roi) \{\
+    panel.remove(instructionLabel); // Remove instruction\
+    updateThumbnails(chosenYear, chosenMonth);\
+  \}\
+\}\
+\
+/**** THUMBNAILS & IMAGE DISPLAY ****/\
+function updateThumbnails(selectedYear, selectedMonth) \{\
+  panel.clear();\
+  panel.add(thumbsPanel);\
+  thumbsPanel.clear();\
+\
+  var startDate = ee.Date(selectedYear + '-' + selectedMonth + '-01');\
+  var endDate = startDate.advance(1, 'month');\
+\
+  var filtered = s2Sr\
+    .filterBounds(roi)\
+    .filterDate(startDate, endDate);\
+\
+  var sorted = filtered.sort('CLOUDY_PIXEL_PERCENTAGE');\
+  var best3 = sorted.limit(3);\
+\
+  var sizeValue = best3.size().getInfo();\
+  if (sizeValue === 0) \{\
+    showMessage('No images found.', 'red');\
+    return;\
+  \}\
+\
+  var bestList = best3.toList(3);\
+\
+  for (var i = 0; i < sizeValue; i++) \{\
+    var thisImage = ee.Image(bestList.get(i));\
+\
+    var selectBtn = ui.Button(\{\
+      label: 'Select Image',\
+      onClick: function() \{\
+        selectedImage = thisImage;\
+        Map.layers().reset();\
+        Map.addLayer(thisImage, viz, 'RGB');\
+        Map.addLayer(calculateGPI(thisImage).select('GPI'), gpiViz, 'GPI');\
+        Map.centerObject(thisImage, 9);\
+\
+        panel.clear();\
+        panel.add(clipPrompt);\
+        panel.add(goBackButton);\
+        clipPrompt.style().set('shown', true);\
+        goBackButton.style().set('shown', true);\
+\
+        drawingTools.setDrawModes(['polygon']);\
+        drawingTools.onDraw(function(poly) \{\
+          clipPolygon = poly;\
+          Map.layers().reset(); // Remove full scene, show clipped version\
+          var clippedImage = calculateGPI(selectedImage).clip(clipPolygon);\
+          Map.addLayer(clippedImage.select('GPI'), gpiViz, 'Clipped GPI');\
+          \
+          panel.widgets().reset();\
+          panel.add(downloadButton);\
+          downloadButton.style().set('shown', true);\
+        \});\
+      \}\
+    \});\
+\
+    thumbsPanel.add(ui.Panel([ui.Thumbnail(\{image: thisImage, params: \{dimensions: '150x150', bands: ['B4','B3','B2'], min: 0, max: 3000\}, style: \{margin: '4px'\}\}), selectBtn], ui.Panel.Layout.flow('vertical')));\
+  \}\
+\}\
+\
+/**** PROCESS IMAGE & GENERATE DOWNLOAD LINK ****/\
+/**** PROCESS IMAGE & GENERATE DOWNLOAD LINK (Only GPI) ****/\
+function processAndDownload(image) \{\
+  var clippedGPI = calculateGPI(image).select('GPI').clip(clipPolygon);\
+\
+  // Generate the download URL\
+  var gpiUrl = clippedGPI.getDownloadURL(\{\
+    name: 'GPI_Clipped_Image',\
+    scale: 30,\
+    region: clipPolygon,\
+    format: 'GeoTIFF',\
+    maxPixels: 1e8\
+  \});\
+\
+  // Clear panel and show the download button\
+  panel.clear();\
+  panel.add(ui.Label('Download Clipped GPI Image:', \{fontWeight: 'bold'\}));\
+\
+  panel.add(ui.Label(\{\
+    value: 'download link',\
+    style: \{color: 'blue', textDecoration: 'underline'\},\
+    targetUrl: gpiUrl\
+  \}));\
+\}\
+}

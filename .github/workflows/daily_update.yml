@@ -34,8 +34,9 @@ jobs:
           Rscript -e "install.packages(c(
             'rnaturalearthdata', 'rnaturalearth', 'shiny', 'sf', 'cronR', 'move', 'dplyr',
             'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect',
-            'leaflet', 'leaflet.extras', 'leafgl', 'terra', 'ggplot2', 'rnaturalearth','rnaturalearthhires'),
+            'leaflet', 'leaflet.extras', 'leafgl', 'terra', 'ggplot2'),
             repos='https://cloud.r-project.org', lib='~/R/library')"
+          Rscript -e "devtools::install_github('ropensci/rnaturalearthhires')"
 
       - name: Run location_data.R
         run: Rscript location_data.R

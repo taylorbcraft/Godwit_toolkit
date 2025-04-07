@@ -119,7 +119,7 @@ combined_data_sf <- combined_data_filter_6 %>%
   st_as_sf(coords = c("location_long", "location_lat"), crs = 4326, remove = FALSE)
 
 # get country polygons
-world <- st_make_valid(ne_countries(scale = "large", returnclass = "sf"))
+world <- st_make_valid(ne_countries(scale = "medium", returnclass = "sf"))
 
 # find country per point
 combined_data_sf <- st_join(combined_data_sf, world["iso_a2"])

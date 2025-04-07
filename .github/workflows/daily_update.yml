@@ -23,7 +23,9 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
+          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin \
+          libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
+          libfontconfig1-dev
           wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto.deb
           sudo dpkg -i quarto.deb
 

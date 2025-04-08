@@ -35,55 +35,55 @@ jobs:
             'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect',
             'leaflet', 'leaflet.extras', 'leafgl', 'terra', 'ggplot2','plotly'),
             repos='https://cloud.r-project.org', lib='~/R/library')"
-      - name: Run location_data.R
-        run: Rscript location_data.R
+      - name: Run import_location_data.R
+        run: Rscript import_location_data.R
 
-      - name: Run filter_location_data.R for Donana
-        run: Rscript Donana_flooding/filter_location_data.R
+      - name: Run filter_location_data.R for Doñana_Wetland_Viewer
+        run: Rscript Doñana_Wetland_Viewer/filter_location_data.R
 
-      - name: Run filter_location_data.R for GPI
-        run: Rscript GPI/filter_location_data.R
+      - name: Run filter_location_data.R for Friesland_GPI_App
+        run: Rscript Friesland_GPI_App/filter_location_data.R
 
-      - name: Run filter_location_data.R for Senegal Delta
-        run: Rscript Senegal_delta/filter_location_data.R
+      - name: Run filter_location_data.R for Senegal_Delta_Habitat_Use_App
+        run: Rscript Senegal_Delta_Habitat_Use_App/filter_location_data.R
 
       - name: Check R environment
         run: Rscript -e "sessionInfo()"
 
-      - name: Deploy Donana_flooding app to shinyapps.io
+      - name: Deploy Doñana_Wetland_Viewer to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',
                                                 secret = '${{ secrets.SHINYAPPS_SECRET }}');
-                      rsconnect::deployApp(appDir = 'Donana_flooding', forceUpdate = TRUE)"
+                      rsconnect::deployApp(appDir = 'Doñana_Wetland_Viewer', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
 
-      - name: Deploy GPI app to shinyapps.io
+      - name: Deploy Friesland_GPI_App to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'GPI', forceUpdate = TRUE)"
+                      rsconnect::deployApp(appDir = 'Friesland_GPI_App', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
 
-      - name: Deploy Senegal_delta app to shinyapps.io
+      - name: Deploy Senegal_Delta_Habitat_Use_App to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'Senegal_delta', forceUpdate = TRUE)"
+                      rsconnect::deployApp(appDir = 'Senegal_Delta_Habitat_Use_App', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
 
-      - name: Deploy Summary_stats app to shinyapps.io
+      - name: Deploy Flyway_Tracking_Summary_App to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'Summary_stats', forceUpdate = TRUE)"
+                      rsconnect::deployApp(appDir = 'Flyway_Tracking_Summary_App', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

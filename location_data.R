@@ -135,7 +135,6 @@ tag_site_lookup <- combined_data_sf %>%
 tag_site_lookup <- tag_site_lookup %>%
   mutate(tag_site = ifelse(tag_site %in% c("NL", "DE", "PT", "ES", "PL"), tag_site, NA))
 
-
 # join back to full dataset
 combined_data_with_tag_site <- combined_data_filter_6 %>%
   left_join(tag_site_lookup, by = "trackId")

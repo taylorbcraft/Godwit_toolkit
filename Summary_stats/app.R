@@ -19,24 +19,24 @@ country_names <- sort(selected_countries_sf$name)
 
 # define ui
 ui <- fluidPage(
-  titlePanel("Black-tailed Godwit Tracks"),
+  titlePanel("Godwit Movement Explorer"),
   sidebarLayout(
     sidebarPanel(
-      h3("instructions"),
-      p("1. select a country, or choose 'custom' to draw your own aoi, or upload a custom aoi file (shp/geojson/gpkg/kml)."),
-      p("2. use the year dropdown and date slider to select a date range."),
-      p("3. filter birds by tagging site."),
-      p("4. select a bird (or keep all) to view latitude plot."),
-      selectInput("country_aoi", "select pre-defined aoi (country) or custom", 
+      h3("Instructions"),
+      p("1. Select a country, or choose 'custom' to draw your own aoi, or upload a custom aoi file (shp/geojson/gpkg/kml)."),
+      p("2. Use the year dropdown and date slider to select a date range."),
+      p("3. Filter birds by tagging site."),
+      p("4. Select a bird (or keep all) to view latitude plot."),
+      selectInput("country_aoi", "Select pre-defined aoi (country) or custom", 
                   choices = c("Custom" = "Custom", country_names),
                   selected = "Custom"),
-      fileInput("aoi_upload", "upload custom aoi (shp/geojson/gpkg/kml)",
+      fileInput("aoi_upload", "Upload custom aoi (shp/geojson/gpkg/kml)",
                 multiple = TRUE,
                 accept = c(".shp", ".dbf", ".shx", ".prj", ".geojson", ".json", ".gpkg", ".kml", ".gml")),
       uiOutput("year_range_ui"),
       uiOutput("date_slider_ui"),
       uiOutput("tag_site_selector"),
-      selectInput("basemap", "choose basemap", 
+      selectInput("basemap", "Choose basemap", 
                   choices = c("CartoDB Positron" = "CartoDB.Positron",
                               "Esri WorldImagery" = "Esri.WorldImagery"),
                   selected = "CartoDB.Positron"),
@@ -119,14 +119,14 @@ server <- function(input, output, session) {
     req(data())
     years <- sort(unique(as.numeric(format(data()$timestamp, "%Y"))))
     choices <- sapply(years[-1], function(y) paste(y - 1, y, sep = "-"))
-    selectInput("year_range_input", "select year", choices = choices, selected = tail(choices, 1))
+    selectInput("year_range_input", "Select year", choices = choices, selected = tail(choices, 1))
   })
   
   output$date_slider_ui <- renderUI({
     req(data(), input$year_range_input)
     yrs <- unlist(strsplit(input$year_range_input, "-"))
     df <- data() %>% filter(format(timestamp, "%Y") %in% yrs)
-    sliderInput("date_slider_input", "select date range",
+    sliderInput("date_slider_input", "Select date range",
                 min = min(df$timestamp), max = max(df$timestamp),
                 value = c(min(df$timestamp), max(df$timestamp)),
                 timeFormat = "%Y-%m-%d")
@@ -135,7 +135,7 @@ server <- function(input, output, session) {
   output$tag_site_selector <- renderUI({
     req(data())
     tag_sites <- na.omit(levels(data()$tag_site))
-    selectInput("selected_tag_site", "tagging site",
+    selectInput("selected_tag_site", "Tagging site",
                 choices = c("All", tag_sites),
                 selected = "All", multiple = FALSE)
   })
@@ -164,8 +164,9 @@ server <- function(input, output, session) {
   })
   
   output$map <- renderLeaflet({
+    req(input$basemap)
     leaflet() %>%
-      addProviderTiles(providers$CartoDB.Positron, layerId = "basemap") %>%
+      addProviderTiles(providers[[input$basemap]], layerId = "basemap") %>%
       setView(lng = 5, lat = 40, zoom = 4.5) %>%
       addDrawToolbar(
         targetGroup = "aoi",
@@ -175,6 +176,16 @@ server <- function(input, output, session) {
         circleMarkerOptions = FALSE
       )
   })
+  
+  observe({
+    req(input$basemap, filtered_data_sf())
+    leafletProxy("map") %>%
+      clearTiles() %>%
+      addProviderTiles(providers[[input$basemap]], layerId = "basemap") %>%
+      clearGroup("locations") %>%
+      addGlPoints(data = filtered_data_sf(), group = "locations", popup = TRUE, radius = 5)
+  })
+  
   
   observe({
     req(filtered_data())
@@ -195,7 +206,7 @@ server <- function(input, output, session) {
     req(filtered_data(), rv$aoi)
     df_aoi <- filtered_data_aoi() %>% st_set_geometry(NULL)
     birds <- unique(as.character(df_aoi$trackId))
-    selectInput("selected_bird", "select bird", choices = c("All", birds), selected = "All")
+    selectInput("selected_bird", "Select bird", choices = c("All", birds), selected = "All")
   })
   
   observe({
@@ -320,7 +331,7 @@ server <- function(input, output, session) {
       summarise(
         visit_start = min(timestamp),
         visit_end = max(timestamp),
-        duration_days = round(as.numeric(difftime(max(timestamp), min(timestamp), units = "days")), 2),
+        duration_days = ceiling(as.numeric(difftime(max(timestamp), min(timestamp), units = "days"))),
         n_fixes = n(),
         .groups = "drop"
       )

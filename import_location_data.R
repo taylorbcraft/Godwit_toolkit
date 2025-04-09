@@ -123,4 +123,4 @@ allLocations <- combined_data_with_tag_site[, .(trackId, timestamp, location_lat
 saveRDS(allLocations, "Doñana_Wetland_Viewer/allLocations.rds")
 saveRDS(allLocations, "Friesland_GPI_App/allLocations.rds")
 saveRDS(allLocations, "Senegal_Delta_Habitat_Use_App/allLocations.rds")
-saveRDS(allLocations, "Flyway_Tracking_Summary_App/allLocations.rds")
+saveRDS(allLocations, "Flyway_Tracking_Summary_App/allLocations.rds

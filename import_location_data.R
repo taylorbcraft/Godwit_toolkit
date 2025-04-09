@@ -1,8 +1,8 @@
+library(dplyr)
 library(move)
 library(data.table)
 library(zoo)
 library(lubridate)
-library(geosphere)
 library(rnaturalearth)
 library(sf)
 

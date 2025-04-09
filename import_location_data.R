@@ -5,12 +5,17 @@ library(zoo)
 library(lubridate)
 library(rnaturalearth)
 library(sf)
+cat("Starting import script\n")
+
+
 
 # movebank login
 login <- movebankLogin(username = "t.b.craft", password = "GodwitSnl24!!")
+cat("Login successful\n")
 
-# load each study individually with metadata preserved
+# load each study
 ib19 <- as.data.table(as.data.frame(getMovebankData(study = 652989041, login = login, removeDuplicatedTimestamps = TRUE)))
+cat("First study downloaded\n")
 microwave2021 <- as.data.table(as.data.frame(getMovebankData(study = 1498143083, login = login, removeDuplicatedTimestamps = TRUE)))
 extremadura2022 <- as.data.table(as.data.frame(getMovebankData(study = 1923591036, login = login, removeDuplicatedTimestamps = TRUE)))
 extremadura2023 <- as.data.table(as.data.frame(getMovebankData(study = 2638950465, login = login, removeDuplicatedTimestamps = TRUE)))
@@ -47,6 +52,7 @@ wildjuv <- as.data.table(as.data.frame(getMovebankData(study = 75360602, login =
 wildjuv2016 <- as.data.table(as.data.frame(getMovebankData(study = 170829089, login = login, removeDuplicatedTimestamps = TRUE)))
 wildjuv2017 <- as.data.table(as.data.frame(getMovebankData(study = 282596404, login = login, removeDuplicatedTimestamps = TRUE)))
 VeenVitaal2023 <- as.data.table(as.data.frame(getMovebankData(study = 2749104371, login = login, removeDuplicatedTimestamps = TRUE)))
+cat("All studies downloaded\n")
 
 # merge everything
 all_study_data <- rbindlist(list(
@@ -123,4 +129,4 @@ allLocations <- combined_data_with_tag_site[, .(trackId, timestamp, location_lat
 saveRDS(allLocations, "Doñana_Wetland_Viewer/allLocations.rds")
 saveRDS(allLocations, "Friesland_GPI_App/allLocations.rds")
 saveRDS(allLocations, "Senegal_Delta_Habitat_Use_App/allLocations.rds")
-saveRDS(allLocations, "Flyway_Tracking_Summary_App/allLocations.rds
+saveRDS(allLocations, "Flyway_Tracking_Summary_App/allLocations.rds")

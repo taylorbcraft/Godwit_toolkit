@@ -4,10 +4,10 @@ library(dplyr)
 library(lubridate)
 
 # load study area boundary for clipping locations
-SRD_boundary <- read_sf('Senegal_delta/SRD_boundary/transboundary-biosphere-reserve.shp')
+SRD_boundary <- read_sf('Senegal_Delta_Habitat_Use_App/SRD_boundary/transboundary-biosphere-reserve.shp')
 
 # load locations
-locations <- readRDS('Senegal_delta/allLocations.rds')
+locations <- readRDS('Senegal_Delta_Habitat_Use_App/allLocations.rds')
 locations <- locations %>%
   mutate(year = format(timestamp, "%Y")) %>%
   filter(year >= "2021")
@@ -32,13 +32,13 @@ compute_season <- function(ts) {
 locations_clipped$season <- compute_season(locations_clipped$timestamp)
 
 # load land cover raster to extract land cover class for each location
-land_cover_raster <- rast("Senegal_delta/landCover.tif")
+land_cover_raster <- rast("Senegal_Delta_Habitat_Use_App/landCover.tif")
 
 # extract the land cover
 lc <- terra::extract(land_cover_raster, vect(locations_clipped))
 locations_clipped$land_cover <- lc[, 2]
 
 # save
-saveRDS(locations_clipped, "Senegal_delta/locations_senegal_delta.rds")
+saveRDS(locations_clipped, "Senegal_Delta_Habitat_Use_App/locations_senegal_delta.rds")
 
 

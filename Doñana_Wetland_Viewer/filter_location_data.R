@@ -2,10 +2,10 @@ library(sf)
 library(dplyr)
 library(terra)
 
-donana <- read_sf('Donana_flooding/donana_geometry/Donana.shp')
+donana <- read_sf('Doñana_Wetland_Viewer/donana_geometry/Donana.shp')
 donana <- st_transform(donana,'EPSG:4326')
 
-locations <- readRDS('Donana_flooding/allLocations.rds')
+locations <- readRDS('Doñana_Wetland_Viewer/allLocations.rds')
 locations <- locations %>%
   mutate(year = format(timestamp, "%Y")) %>%
   filter(year >= "2021")
@@ -19,4 +19,4 @@ locations_clipped <- locations_sf %>%
 
 locations_clipped <- st_intersection(locations_clipped,st_union(donana))
 
-saveRDS(locations_clipped,'Donana_flooding/locations_donana.rds')
+saveRDS(locations_clipped,'Doñana_Wetland_Viewer/locations_donana.rds')

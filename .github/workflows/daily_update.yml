@@ -56,7 +56,7 @@ jobs:
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',
                                                 secret = '${{ secrets.SHINYAPPS_SECRET }}');
-                      rsconnect::deployApp(appDir = 'Doñana_Wetland_Viewer', forceUpdate = TRUE)"
+                      rsconnect::deployApp(appDir = 'Doñana_Wetland_Viewer', appName = 'Doñana_Wetland_Viewer', forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

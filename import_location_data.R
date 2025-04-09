@@ -108,7 +108,7 @@ tag_site_lookup <- combined_data_sf %>%
   group_by(trackId) %>%
   slice(1) %>%
   ungroup() %>%
-  select(trackId, tag_site = iso_a2) %>%
+  dplyr::select(trackId, tag_site = iso_a2) %>%
   mutate(tag_site = ifelse(tag_site %in% c("NL", "DE", "PT", "ES", "PL"), tag_site, NA))
 
 combined_data_with_tag_site <- as.data.table(combined_data_filter_6) %>%

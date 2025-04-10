@@ -124,6 +124,10 @@ combined_data_with_tag_site[, tag_site := as.factor(tag_site)]
 
 # final export object
 allLocations <- combined_data_with_tag_site[, .(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor, tag_site)]
+allLocations[, sex := toupper(trimws(sex))]
+allLocations[sex == "" | sex == "U" | is.na(sex), sex := NA]
+allLocations[, sex := factor(sex, levels = c("M", "F"))]
+
 
 # export
 saveRDS(allLocations, "Doñana_Wetland_Viewer/allLocations.rds")

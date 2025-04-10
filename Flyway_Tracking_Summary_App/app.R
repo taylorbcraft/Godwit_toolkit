@@ -10,12 +10,16 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(plotly)
 library(data.table)
+library(shinycssloaders)
 
-# load country boundaries
-countries_sf <- ne_countries(scale = "medium", returnclass = "sf")
-selected_countries_sf <- countries_sf %>%
-  filter(continent == "Europe" | (continent == "Africa" & subregion %in% c("Northern Africa", "Western Africa")))
-country_names <- sort(selected_countries_sf$name)
+
+# import location data
+all_data <- readRDS('allLocations.rds')
+setDT(all_data)
+
+# import country 
+countries_sf <- readRDS('countries_sf.rds')
+country_names <- sort(unique(countries_sf$name))
 
 # define ui
 ui <- fluidPage(
@@ -43,13 +47,12 @@ ui <- fluidPage(
       uiOutput("download_visits_ui")
     ),
     mainPanel(
-      leafletOutput("map"),
+      withSpinner(leafletOutput("map"), type = 6),
       verbatimTextOutput("summary"),
-      tableOutput("test_visit_summary"),
       conditionalPanel(
         condition = "output.aoi_drawn == true",
         uiOutput("bird_select"),
-        plotlyOutput("lat_plot"),
+        withSpinner(plotlyOutput("lat_plot"), type = 6),
         tableOutput("summary_table")
       )
     )
@@ -59,18 +62,7 @@ ui <- fluidPage(
 # define server
 server <- function(input, output, session) {
   sf::sf_use_s2(FALSE)
-  
-  data <- reactive({
-    req(file.exists("allLocations.rds"))
-    df <- as.data.table(readRDS("allLocations.rds"))
-    setkey(df, timestamp)
-    df[, tag_site := as.factor(tag_site)]
-    df[, sex := toupper(trimws(sex))]
-    df[sex == "" | sex == "U" | is.na(sex), sex := NA]
-    df[, sex := factor(sex, levels = c("M", "F"))]
-    return(df)
-  })
-  
+  data <- reactive({ all_data })
   rv <- reactiveValues(aoi = NULL)
   
   observeEvent(input$country_aoi, {
@@ -142,14 +134,21 @@ server <- function(input, output, session) {
   
   filtered_data <- reactive({
     req(input$year_range_input, input$date_slider_input)
-    df <- data()
-    if (input$selected_tag_site != "All") {
-      first_tags <- df[, .SD[1], by = trackId][tag_site == input$selected_tag_site]
-      track_ids <- first_tags$trackId
-      df <- df[trackId %in% track_ids]
-    }
+    
     yrs <- unlist(strsplit(input$year_range_input, "-"))
-    df <- df[format(timestamp, "%Y") %in% yrs & timestamp >= input$date_slider_input[1] & timestamp <= input$date_slider_input[2]]
+    ts_min <- input$date_slider_input[1]
+    ts_max <- input$date_slider_input[2]
+    
+    df <- all_data[
+      format(timestamp, "%Y") %in% yrs & 
+        timestamp >= ts_min & 
+        timestamp <= ts_max
+    ]
+    
+    if (!is.null(input$selected_tag_site) && input$selected_tag_site != "All") {
+      df <- df[tag_site == input$selected_tag_site]
+    }
+    
     return(df)
   })
   
@@ -158,9 +157,13 @@ server <- function(input, output, session) {
     st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
   })
   
+  #
+  filtered_data_sf <- debounce(filtered_data_sf, millis = 500)
+  
   filtered_data_aoi <- reactive({
     req(filtered_data_sf(), rv$aoi)
-    st_filter(filtered_data_sf(), rv$aoi)
+    cropped <- st_crop(filtered_data_sf(), rv$aoi)
+    st_filter(cropped, rv$aoi)
   })
   
   output$map <- renderLeaflet({
@@ -178,19 +181,19 @@ server <- function(input, output, session) {
   })
   
   observe({
-    req(input$basemap, filtered_data_sf())
-    leafletProxy("map") %>%
-      clearTiles() %>%
-      addProviderTiles(providers[[input$basemap]], layerId = "basemap") %>%
-      clearGroup("locations") %>%
-      addGlPoints(data = filtered_data_sf(), group = "locations", popup = TRUE, radius = 5)
-  })
-  
-  
-  observe({
     req(filtered_data())
     df_sf <- filtered_data_sf()
     leafletProxy("map") %>%
+      clearGroup("locations") %>%
+      addGlPoints(data = df_sf, group = "locations", popup = TRUE, radius = 5)
+  })
+  
+  observeEvent(input$basemap, {
+    req(filtered_data_sf())
+    df_sf <- filtered_data_sf()
+    leafletProxy("map") %>%
+      clearTiles() %>%
+      addProviderTiles(providers[[input$basemap]], layerId = "basemap") %>%
       clearGroup("locations") %>%
       addGlPoints(data = df_sf, group = "locations", popup = TRUE, radius = 5)
   })
@@ -243,6 +246,7 @@ server <- function(input, output, session) {
     df_all <- df_all %>%
       mutate(date = as.Date(timestamp), trackId = as.character(trackId)) %>%
       arrange(trackId, date)
+    
     p <- ggplot(df_all, aes(x = date, y = location_lat, color = trackId,
                             text = paste("trackId:", trackId, "<br>Date:", date))) +
       geom_line(alpha = 0.8, aes(group = trackId)) +

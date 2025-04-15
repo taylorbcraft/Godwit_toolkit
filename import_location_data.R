@@ -104,7 +104,12 @@ combined_data_filter_6 <- combined_data_filter %>%
   ungroup() %>%
   dplyr::select(-date)
 
-# tagging site
+combined_data_filter_6 <- combined_data_filter
+
+# remove unnecessary columns
+combined_data_filter_6 <- combined_data_filter_6[, .(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor)]
+
+# add tagging site
 combined_data_sf <- st_as_sf(combined_data_filter_6, coords = c("location_long", "location_lat"), crs = 4326, remove = FALSE)
 world <- st_make_valid(ne_countries(scale = "medium", returnclass = "sf"))
 combined_data_sf <- st_join(combined_data_sf, world["iso_a2"])
@@ -128,9 +133,9 @@ allLocations[, sex := toupper(trimws(sex))]
 allLocations[sex == "" | sex == "U" | is.na(sex), sex := NA]
 allLocations[, sex := factor(sex, levels = c("M", "F"))]
 
-
 # export
 saveRDS(allLocations, "Doñana_Wetland_Viewer/allLocations.rds")
 saveRDS(allLocations, "Friesland_GPI_App/allLocations.rds")
 saveRDS(allLocations, "Senegal_Delta_Habitat_Use_App/allLocations.rds")
 saveRDS(allLocations, "Flyway_Tracking_Summary_App/allLocations.rds")
+

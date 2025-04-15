@@ -20,12 +20,19 @@ jobs:
         with:
           r-version: '4.4.2'
 
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Verify Quarto installation
+        run: |
+          quarto --version
+
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
-          wget -qO- https://quarto.org/download/latest/quarto-linux-amd64.deb > quarto.deb
-          sudo dpkg -i quarto.deb
+          
       - name: Install R packages
         run: |
           mkdir -p ~/R/library

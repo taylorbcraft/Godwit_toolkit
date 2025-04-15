@@ -33,7 +33,7 @@ jobs:
           Rscript -e "install.packages(c(
             'rnaturalearthdata', 'rnaturalearth', 'shiny', 'sf', 'cronR', 'move', 'dplyr',
             'purrr', 'data.table', 'zoo', 'lubridate', 'mapview', 's2', 'rsconnect',
-            'leaflet', 'leaflet.extras', 'leafgl', 'terra', 'ggplot2','plotly'),
+            'leaflet', 'leaflet.extras', 'leafgl', 'terra', 'ggplot2','plotly','shinycssloaders'),
             repos='https://cloud.r-project.org', lib='~/R/library')"
       - name: Run import_location_data.R
         run: Rscript import_location_data.R

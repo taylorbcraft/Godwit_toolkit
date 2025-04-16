@@ -1,0 +1,12 @@
+name: flyway_tracking_summary_app
+title: Flyway_Tracking_Summary_App
+username: tbcraft
+account: tbcraft
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14472007
+bundleId: 10123999
+url: https://tbcraft.shinyapps.io/flyway_tracking_summary_app/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

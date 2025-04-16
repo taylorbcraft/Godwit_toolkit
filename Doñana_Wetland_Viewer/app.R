@@ -8,7 +8,7 @@ library(terra)
 library(ggplot2)
 
 ui <- fluidPage(
-  titlePanel("Water Availability in the Doñana Wetlands"),
+  titlePanel("Doñana Wetland Viewer"),
   
   sidebarLayout(
     sidebarPanel(

@@ -10,7 +10,7 @@ library(ggplot2)
 library(scales)
 
 ui <- fluidPage(
-  titlePanel("Habitat Use of Black-tailed Godwits in the Senegal Delta"),
+  titlePanel("Senegal Delta Habitat Use"),
   
   sidebarLayout(
     sidebarPanel(

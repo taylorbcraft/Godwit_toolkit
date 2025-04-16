@@ -1,0 +1,12 @@
+name: Senegal_Delta_Habitat_Use_App
+title: Senegal_Delta_Habitat_Use_App
+username: tbcraft
+account: tbcraft
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14535704
+bundleId: 10124072
+url: https://tbcraft.shinyapps.io/Senegal_Delta_Habitat_Use_App/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

@@ -1,12 +1,12 @@
-name: Donana_flooding
-title: Donana_flooding
+name: Friesland_GPI_App
+title: Friesland_GPI_App
 username: tbcraft
 account: tbcraft
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 13894424
-bundleId: 9816473
-url: https://tbcraft.shinyapps.io/Donana_flooding/
+appId: 14535691
+bundleId: 10124049
+url: https://tbcraft.shinyapps.io/Friesland_GPI_App/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE

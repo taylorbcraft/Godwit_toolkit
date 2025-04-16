@@ -7,7 +7,7 @@ library(leafgl)
 library(terra)
 
 ui <- fluidPage(
-  titlePanel("Grassland Production Intensity (GPI)"),
+  titlePanel("Friesland Grassland Production Intensity (GPI)"),
   
   sidebarLayout(
     sidebarPanel(

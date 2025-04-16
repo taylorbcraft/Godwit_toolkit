@@ -90,7 +90,7 @@ jobs:
       - name: Deploy Flyway_Tracking_Summary_App to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'Flyway_Tracking_Summary_App', forceUpdate = TRUE)"
+                      rsconnect::deployApp(appDir = 'Flyway_Tracking_Summary_App', quarto = NA, forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}

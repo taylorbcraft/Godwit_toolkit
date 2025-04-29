@@ -183,10 +183,23 @@ server <- function(input, output, session) {
   observe({
     req(filtered_data())
     df_sf <- filtered_data_sf()
+    
+    # Thin: Keep only one point per bird per day
+    if (nrow(df_sf) > 1) {
+      df_sf <- df_sf %>%
+        mutate(date = as.Date(timestamp)) %>%
+        group_by(trackId, date) %>%
+        slice(1) %>%  # Keep the first point of each day per bird
+        ungroup()
+    }
+    
     leafletProxy("map") %>%
       clearGroup("locations") %>%
       addGlPoints(data = df_sf, group = "locations", popup = TRUE, radius = 5)
   })
+  
+  
+  
   
   observeEvent(input$basemap, {
     req(filtered_data_sf())

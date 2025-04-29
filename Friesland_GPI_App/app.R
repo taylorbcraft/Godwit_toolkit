@@ -19,6 +19,7 @@ ui <- fluidPage(
       uiOutput("year_select"),
       uiOutput("date_slider"),  # added for the date slider
       uiOutput("file_info"),
+      uiOutput("bird_select"),
       
       selectInput("basemap", "choose basemap", 
                   choices = c("CartoDB Positron" = "CartoDB.Positron",
@@ -89,6 +90,31 @@ server <- function(input, output, session) {
                 timeFormat = "%Y-%m-%d", step = 1)
   })
   
+  output$bird_select <- renderUI({
+    req(filtered_data())
+    birds <- sort(unique(as.character(filtered_data()$trackId)))
+    selectInput("selected_bird", "select individual", 
+                choices = c("All Birds", birds),
+                selected = "All Birds")
+  })
+  
+  bird_data <- reactive({
+    req(filtered_data())
+    df <- filtered_data()
+    
+    if (input$selected_bird != "All Birds") {
+      df <- df %>% filter(trackId == input$selected_bird)
+    }
+    
+    if (!is.null(rv$aoi)) {
+      df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
+      df <- df_sf[st_intersects(df_sf, rv$aoi, sparse = FALSE), ]
+    }
+    
+    df
+  })
+  
+  
   # reactive expression to filter data by the selected year and date range
   filtered_data <- reactive({
     req(input$year, input$date_range, all_locations())
@@ -108,57 +134,76 @@ server <- function(input, output, session) {
     req(filtered_data())
     df <- filtered_data()
     
-    # check if there is any data before trying to create a leaflet map
     if (nrow(df) == 0) {
-      leaflet() %>% addProviderTiles(providers$CartoDB.Positron) %>%
-        addPopups(lng = -10, lat = 14, popup = "no data available for this timeframe")
-    } else {
-      df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
-      
-      # get the selected year and load the corresponding raster
-      # if "all years" is selected, use the most recent year's raster by default
-      if (input$year == "All Years") {
-        selected_raster <- gpi_rasters()[["gpi_2024"]]
-      } else {
-        selected_raster <- gpi_rasters()[[paste0("gpi_", input$year)]]
-      }
-      
-      # define the color palette for the raster values
-      pal <- colorNumeric(palette = "YlGn", domain = values(selected_raster), na.color = "transparent")
-      
-      leaflet() %>%
-        addProviderTiles(providers[[input$basemap]]) %>%
-        addGlPoints(
-          data = df_sf,  
-          group = "locations",
-          popup = TRUE,
-          radius = 5,
-          fillColor = 'cyan'
-        ) %>%
-        addDrawToolbar(
-          targetGroup = "aoi",
-          editOptions = editToolbarOptions(selectedPathOptions = selectedPathOptions()),
-          polylineOptions = FALSE,
-          markerOptions = FALSE,
-          circleMarkerOptions = FALSE
-        ) %>%
-        addRasterImage(selected_raster, 
-                       project = FALSE, 
-                       colors = pal) %>%
-        # add legend with two bins and custom labels low and high
-        addLegend(
-          position = "bottomright",
-          pal = pal,
-          values = values(selected_raster),  # use the raster values as the domain
-          title = "GPI",
-          opacity = 0.7,
-          bins = 2,  # force two bins for low and high
-          labFormat = function(type, cuts, p) {
-            c("low", "high")
-          }
-        )
+      return(
+        leaflet() %>% addProviderTiles(providers$CartoDB.Positron) %>%
+          addPopups(lng = -10, lat = 14, popup = "no data available for this timeframe")
+      )
     }
+    
+    df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
+    
+    
+    if (input$year == "All Years") {
+      selected_raster <- gpi_rasters()[["gpi_2024"]]
+    } else {
+      selected_raster <- gpi_rasters()[[paste0("gpi_", input$year)]]
+    }
+    
+    pal <- colorNumeric(palette = "YlGn", domain = values(selected_raster), na.color = "transparent")
+    
+    # if a specific bird is selected, filter just that bird
+    if (input$selected_bird != "All Birds") {
+      df_sf <- df_sf %>% filter(trackId == input$selected_bird)
+    }
+    
+    # start building the map
+    map <- leaflet() %>%
+      addProviderTiles(providers[[input$basemap]]) %>%
+      addGlPoints(
+        data = df_sf,
+        group = "locations",
+        popup = TRUE,
+        radius = 3,
+        fillColor = 'cyan'
+      ) %>%
+      addDrawToolbar(
+        targetGroup = "aoi",
+        editOptions = editToolbarOptions(selectedPathOptions = selectedPathOptions()),
+        polylineOptions = FALSE,
+        markerOptions = FALSE,
+        circleMarkerOptions = FALSE
+      ) %>%
+      addRasterImage(selected_raster, project = FALSE, colors = pal) %>%
+      addLegend(
+        position = "bottomright",
+        pal = pal,
+        values = values(selected_raster),
+        title = "GPI",
+        opacity = 0.7,
+        bins = 2,
+        labFormat = function(type, cuts, p) c("low", "high")
+      )
+    
+    # highlight selected bird path
+    if (input$selected_bird != "All Birds") {
+      df_path <- df %>%
+        filter(trackId == input$selected_bird) %>%
+        arrange(timestamp)
+      
+      if (nrow(df_path) > 1) {
+        df_path_sf <- st_as_sf(df_path, coords = c("location_long", "location_lat"), crs = 4326)
+        df_line <- df_path_sf %>%
+          summarise(do_union = FALSE) %>%
+          st_cast("LINESTRING")
+        
+        map <- map %>%
+          addPolylines(data = df_line, color = "red", weight = 1, group = "selected path")
+      }
+    }
+    map
   })
+
   
   # update the aoi and recalculate the summary when a new polygon is drawn
   observeEvent(input$map_draw_new_feature, {
@@ -190,7 +235,12 @@ server <- function(input, output, session) {
   # render the histogram of gpi values for points that intersect the locations
   output$gpi_hist <- renderPlot({
     req(filtered_data())
-    df <- filtered_data()
+    df <- bird_data()
+    if (nrow(df) == 0) {
+      plot.new()
+      text(0.5, 0.5, "no points in selected aoi or timeframe", cex = 1.5)
+      return()
+    }
     df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
     
     # if aoi is drawn, filter points to those within the aoi
@@ -242,13 +292,16 @@ server <- function(input, output, session) {
       gpi_values_scaled <- rep(0, length(gpi_values))
     }
     
+    # set font sizes
+    par(cex.lab = 1.5, cex.axis = 1.3, cex.main = 1.5)
+    
     # plot histogram of scaled gpi values with default numeric axis
     hist(gpi_values_scaled,main = "",
          xlab = "Grassland Production Intensity", ylab = "Godwit Locations", col = "lightblue", border = "white")
     
     # add additional text labels below 0 and 1 without replacing the default tick labels
-    mtext("low", side = 1, at = 0, line = 3, cex = 0.8)
-    mtext("high", side = 1, at = 1, line = 3, cex = 0.8)
+    mtext("low", side = 1, at = 0, line = 3, cex = 1.2)
+    mtext("high", side = 1, at = 1, line = 3, cex = 1.2)
   })
 }
 

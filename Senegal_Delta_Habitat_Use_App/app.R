@@ -207,7 +207,7 @@ server <- function(input, output, session) {
         line_sf <- st_sf(trackId = input$individual, geometry = line_sf)
         
         m <- m %>% 
-          addPolylines(data = line_sf, color = "cyan", weight = 4, group = "track_line")
+          addPolylines(data = line_sf, color = "cyan", opacity = 1, weight = 4, group = "track_line")
       }
       
       m

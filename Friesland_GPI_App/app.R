@@ -28,14 +28,22 @@ ui <- fluidPage(
     ),
     
     mainPanel(
-      leafletOutput("map"),
+      shinycssloaders::withSpinner(leafletOutput("map"), type = 6),
       verbatimTextOutput("summary"),
-      plotOutput("gpi_hist", height = "300px")  # added histogram output
+      shinycssloaders::withSpinner(plotOutput("gpi_hist", height = "300px"), type = 6)
     )
   )
 )
 
 server <- function(input, output, session) {
+  # --- Temporary Debug ---
+  print(list.files())
+  print(list.files("gpi_data"))
+  if (!file.exists("gpi_data/gpi_2021.tif")) {
+    stop("GPI raster file gpi_2021.tif NOT FOUND!")
+  }
+  # --- End Debug ---
+  
   
   # load data, filtering for 2021 and newer
   all_locations <- reactive({
@@ -48,21 +56,24 @@ server <- function(input, output, session) {
   
   # load all raster files for different years
   gpi_rasters <- reactive({
-    # load rasters for 2021, 2022, 2023, and 2024
-    raster_files <- list(
-      gpi_2021 = rast("gpi_data/gpi_2021.tif"),
-      gpi_2022 = rast("gpi_data/gpi_2022.tif"),
-      gpi_2023 = rast("gpi_data/gpi_2023.tif"),
-      gpi_2024 = rast("gpi_data/gpi_2024.tif")
+    files <- list.files("gpi_data", pattern = "\\.tif$", full.names = TRUE)
+    validate(
+      need(length(files) > 0, "Loading GPI rasters... please wait")
     )
     
-    # project and sample the rasters for leaflet display
-    lapply(raster_files, function(r) {
+    rasters <- list()
+    for (file in files) {
+      year <- gsub(".*gpi_(\\d{4})\\.tif$", "\\1", file)
+      r <- terra::rast(file)
       r <- projectRasterForLeaflet(r, method = 'bilinear')
       r <- spatSample(r, 100000, method = "regular", as.raster = TRUE)
-      return(r)
-    })
+      rasters[[paste0("gpi_", year)]] <- r
+    }
+    
+    return(rasters)
   })
+  
+  
   
   # update the year selection input based on the uploaded data
   output$year_select <- renderUI({

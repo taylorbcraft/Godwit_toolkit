@@ -5,7 +5,7 @@ account: tbcraft
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 14535691
-bundleId: 10196777
+bundleId: 10198346
 url: https://tbcraft.shinyapps.io/Friesland_GPI_App/
 version: 1
 asMultiple: FALSE

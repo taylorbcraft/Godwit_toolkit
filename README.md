@@ -6,6 +6,8 @@
 
 Visualizes godwit movements across Europe and Africa, allowing users to define areas of interest (AOIs), filter by date or tagging site, and generate visit statistics and time-series plots.
 
+https://tbcraft.shinyapps.io/Friesland_GPI_App/
+
 2.) Friesland GPI Viewer
 
 Examines habitat use in Dutch breeding grounds, linking godwit locations to Grassland Production Intensity (GPI) derived from Sentinel-2 imagery.
@@ -14,9 +16,13 @@ Examines habitat use in Dutch breeding grounds, linking godwit locations to Gras
 
 Analyzes spring stopover use in southern Spain. Classifies each location as flooded or dry based on monthly SWIR1 composite rasters.
 
+ https://tbcraft.shinyapps.io/Donana_Wetland_Viewer/
+
 4.) Senegal Delta Habitat Use
 
 Summarizes habitat use in the Senegal River Delta, using land cover classifications and seasonal filters to explore habitat preferences during the non-breeding season.
+
+https://tbcraft.shinyapps.io/Senegal_Delta_Habitat_Use_App/
 
 **GEE Apps**
 
@@ -30,5 +36,7 @@ Generates flood maps from Landsat SWIR1 imagery with automated cloud masking and
 
 3.) Land Cover Classification
 
-A code-based tool for supervised land cover classification using Landsat 9, designed for flexible, user-defined training data.
+Interactive land cover classification application with user-created ground training points.
+
+https://ee-tbcraft.projects.earthengine.app/view/landcoverclassificationapp
 

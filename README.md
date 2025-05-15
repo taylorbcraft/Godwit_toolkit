@@ -12,6 +12,8 @@ https://tbcraft.shinyapps.io/Friesland_GPI_App/
 
 Examines habitat use in Dutch breeding grounds, linking godwit locations to Grassland Production Intensity (GPI) derived from Sentinel-2 imagery.
 
+https://tbcraft.shinyapps.io/flyway_tracking_summary_app/
+
 3.) Doñana Wetland Viewer
 
 Analyzes spring stopover use in southern Spain. Classifies each location as flooded or dry based on monthly SWIR1 composite rasters.

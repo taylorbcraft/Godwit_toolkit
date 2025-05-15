@@ -36,14 +36,6 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  # --- Temporary Debug ---
-  print(list.files())
-  print(list.files("gpi_data"))
-  if (!file.exists("gpi_data/gpi_2021.tif")) {
-    stop("GPI raster file gpi_2021.tif NOT FOUND!")
-  }
-  # --- End Debug ---
-  
   
   # load data, filtering for 2021 and newer
   all_locations <- reactive({
@@ -78,11 +70,20 @@ server <- function(input, output, session) {
   # update the year selection input based on the uploaded data
   output$year_select <- renderUI({
     req(all_locations())
-    years <- unique(format(all_locations()$timestamp, "%Y"))
-    years <- sort(years, decreasing = TRUE)
-    years <- c(years, "All Years")
-    selectInput("year", "Select Year", choices = years, selected = years[1])
+    # Get years from location data
+    loc_years <- unique(format(all_locations()$timestamp, "%Y"))
+    # Get years from available GPI raster filenames
+    raster_files <- list.files("gpi_data", pattern = "gpi_\\d{4}\\.tif$")
+    raster_years <- gsub("gpi_(\\d{4})\\.tif", "\\1", raster_files)
+    # Intersect both year sets to ensure both data and rasters exist
+    valid_years <- sort(intersect(loc_years, raster_years), decreasing = TRUE)
+    # Append "All Years" to choices
+    year_choices <- c(valid_years, "All Years")
+    # Default to most recent valid year
+    default_year <- ifelse(length(valid_years) > 0, valid_years[1], "All Years")
+    selectInput("year", "Select Year", choices = year_choices, selected = default_year)
   })
+  
   
   # update the date slider based on the year selection
   output$date_slider <- renderUI({

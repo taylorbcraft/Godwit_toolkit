@@ -30,9 +30,13 @@ https://tbcraft.shinyapps.io/Senegal_Delta_Habitat_Use_App/
 
 Computes and exports grassland productivity layers using Sentinel-2 Red Edge Position indices.
 
+https://ee-tbcraft.projects.earthengine.app/view/grasslandproductionintensity
+
 2.) Surface Water Mapping
 
 Generates flood maps from Landsat SWIR1 imagery with automated cloud masking and composite creation.
+
+https://ee-tbcraft.projects.earthengine.app/view/floodmapping
 
 3.) Land Cover Classification
 

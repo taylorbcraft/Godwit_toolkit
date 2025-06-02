@@ -157,7 +157,6 @@ server <- function(input, output, session) {
     st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
   })
   
-  #
   filtered_data_sf <- debounce(filtered_data_sf, millis = 500)
   
   filtered_data_aoi <- reactive({
@@ -197,9 +196,6 @@ server <- function(input, output, session) {
       clearGroup("locations") %>%
       addGlPoints(data = df_sf, group = "locations", popup = TRUE, radius = 5)
   })
-  
-  
-  
   
   observeEvent(input$basemap, {
     req(filtered_data_sf())

@@ -27,7 +27,7 @@ ui <- fluidPage(
     
     mainPanel(
       leafletOutput("map"),
-      verbatimTextOutput("summary")
+      plotOutput("flood_barplot")
     )
   )
 )
@@ -108,28 +108,44 @@ server <- function(input, output, session) {
     )
   })
   
-  # render a text summary comparing flooded and non-flooded locations
-  output$summary <- renderPrint({
-    req(filtered_data())
+  flooded_fix_summary <- reactive({
+    req(filtered_data(), selected_raster())
     df <- filtered_data()
     r <- selected_raster()
-    if (is.null(r)) {
-      cat("no raster available for this selection.\n")
-    } else {
-      df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
-      v <- terra::vect(df_sf)
-      pixel_values <- terra::extract(r, v)
-      # assume the raster pixel values are in the second column
-      df_sf$pixel_val <- pixel_values[,2]
-      df_sf$flooded <- ifelse(df_sf$pixel_val < 0.128, "flooded", "non-flooded")
-      
-      flooded_count <- sum(df_sf$flooded == "flooded", na.rm = TRUE)
-      non_flooded_count <- sum(df_sf$flooded == "non-flooded", na.rm = TRUE)
-      
-      cat("locations in flooded pixels:", flooded_count, "\n")
-      cat("locations in non-flooded pixels:", non_flooded_count, "\n")
-    }
+    
+    df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
+    v <- terra::vect(df_sf)
+    pixel_values <- terra::extract(r, v)
+    df_sf$pixel_val <- pixel_values[,2]
+    df_sf$flooded <- ifelse(df_sf$pixel_val < 0.128, "flooded", "non-flooded")
+    
+    df_sf %>% st_drop_geometry()
   })
+  
+  output$flood_barplot <- renderPlot({
+    df <- flooded_fix_summary()
+    
+    summary_data <- df %>%
+      count(flooded) %>%
+      mutate(Proportion = n / sum(n))
+    
+    ggplot(summary_data, aes(x = flooded, y = Proportion, fill = flooded)) +
+      geom_bar(stat = "identity", width = 0.6) +
+      geom_text(aes(label = paste0("n = ", n)), vjust = -0.5, size = 5) +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                         expand = expansion(mult = c(0, 0.15))) +
+      labs(
+        x = NULL,
+        y = "Proportion of GPS Fixes"
+      ) +
+      theme_minimal() +
+      theme(axis.text = element_text(size = 14),
+            axis.title.y = element_text(size = 16),
+            axis.title.x = element_text(size = 16),
+            legend.position = "none")
+  })
+  
+  
   
   # render the leaflet map with points and (if available) the masked raster
   output$map <- renderLeaflet({

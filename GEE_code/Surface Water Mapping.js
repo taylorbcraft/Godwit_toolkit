@@ -3,7 +3,7 @@
  * 
  * This app allows users to generate a median composite of Landsat images
  * for a selected month and year by clicking on the map. The app:
- * - Allows users to select a point on the map, creating a 50km buffer AOI.
+ * - Allows users to select a point on the map, creating a 30km buffer AOI.
  * - Processes Landsat 7, 8, and 9 images within the AOI and date range.
  * - Applies cloud masking and scaling factors.
  * - Displays the composite as a map layer.
@@ -54,14 +54,14 @@ Map.layers().add(pointLayer);
 Map.layers().add(aoiLayer);
 
 Map.setCenter(0, 0, 2);
-print('Click on the map to select a point. The app will create a 50km AOI around it.');
+print('Click on the map to select a point. The app will create a 30km AOI around it.');
 
 // Change cursor style to crosshair for better indication of point selection
 Map.style().set('cursor', 'crosshair');
 
 Map.onClick(function(coords) {
   selectedPoint = ee.Geometry.Point(coords.lon, coords.lat);
-  aoi = selectedPoint.buffer(50000).bounds();
+  aoi = selectedPoint.buffer(30000).bounds();
   pointLayer.setEeObject(selectedPoint);
   aoiLayer.setEeObject(aoi);
   print('Selected point:', selectedPoint);

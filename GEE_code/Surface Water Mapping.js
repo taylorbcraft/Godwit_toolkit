@@ -147,7 +147,7 @@ var panel = ui.Panel({
   style: {width: '300px', padding: '8px'}
 });
 panel.add(ui.Label({value: 'Landsat Composite App', style: {fontWeight: 'bold', fontSize: '16px'}}));
-panel.add(ui.Label('This app generates a 1-month Landsat SWIR composite for surface water monitoring. A 50km buffer is created around a user-defined point to define the area of interest (AOI). A median composite of Landsat 7, 8, and 9 imagery captured over the AOI is displayed and made available for download.'));
+panel.add(ui.Label('This app generates a 1-month Landsat SWIR composite for surface water monitoring. A 30km buffer is created around a user-defined point to define the area of interest (AOI). A median composite of Landsat 7, 8, and 9 imagery captured over the AOI is displayed and made available for download.'));
 panel.add(ui.Label('Select a point on the map to generate a composite.'));
 
 var yearInput = ui.Textbox({

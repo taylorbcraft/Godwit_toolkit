@@ -259,7 +259,12 @@ server <- function(input, output, session) {
         scale_y_continuous(labels = function(x) paste0(x, "%")) +
         scale_fill_manual(values = land_cover_colors) +
         theme_minimal() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+        theme(
+          axis.text.x = element_text(, size = 12, angle = 45, hjust = 1),
+          axis.text.y = element_text(size = 12),
+          axis.title.x = element_text(size = 14),
+          axis.title.y = element_text(size = 14)
+        )
       
       print(p)
     }

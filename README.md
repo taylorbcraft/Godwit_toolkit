@@ -1,48 +1,87 @@
-# Godwit Toolkit
- 
-**R Shiny Apps**
+# Godwit Landscape Toolkit
 
-1.) Flyway Tracking Summary
+The **Godwit Toolkit** is an open-source suite of interactive applications designed to support spatial and movement ecology, with a focus on migratory shorebirds such as the Black-tailed Godwit (*Limosa limosa limosa*).
 
-Visualizes godwit movements across Europe and Africa, allowing users to define areas of interest (AOIs), filter by date or tagging site, and generate visit statistics and time-series plots.
+It includes:
 
-https://tbcraft.shinyapps.io/Friesland_GPI_App/
+- R Shiny Viewers for exploring telemetry data in ecological context  
+- Google Earth Engine (GEE) Tools for generating and exporting environmental raster layers  
 
-2.) Friesland GPI Viewer
+The toolkit enables conservation researchers and practitioners to interact with large-scale telemetry and satellite datasets in an intuitive, browser-based format — without requiring advanced geospatial coding expertise.
 
-Examines habitat use in Dutch breeding grounds, linking godwit locations to Grassland Production Intensity (GPI) derived from Sentinel-2 imagery.
+---
 
-https://tbcraft.shinyapps.io/flyway_tracking_summary_app/
+## R Shiny Applications
 
-3.) Doñana Wetland Viewer
+Interactive viewers for exploring godwit movement data in relation to environmental variables:
 
-Analyzes spring stopover use in southern Spain. Classifies each location as flooded or dry based on monthly SWIR1 composite rasters.
+- **Flyway Movement Viewer**  
+  https://tbcraft.shinyapps.io/flyway_tracking_summary_app/
 
- https://tbcraft.shinyapps.io/Donana_Wetland_Viewer/
+- **Friesland Grassland Productivity Viewer**  
+  https://tbcraft.shinyapps.io/Friesland_GPI_App/
 
-4.) Senegal Delta Habitat Use
+- **Doñana Wetland Viewer**  
+  https://tbcraft.shinyapps.io/Donana_Wetland_Viewer/
 
-Summarizes habitat use in the Senegal River Delta, using land cover classifications and seasonal filters to explore habitat preferences during the non-breeding season.
+- **Senegal Delta Habitat Viewer**  
+  https://tbcraft.shinyapps.io/Senegal_Delta_Habitat_Use_App/
 
-https://tbcraft.shinyapps.io/Senegal_Delta_Habitat_Use_App/
+---
 
-**GEE Apps**
+## Google Earth Engine Applications
 
-1.) GPI Raster Export
+Browser-based tools for generating and exporting environmental raster layers:
 
-Computes and exports grassland productivity layers using Sentinel-2 Red Edge Position indices.
+- **Grassland Productivity Tool**  
+  https://ee-tbcraft.projects.earthengine.app/view/grasslandproductionintensity
 
-https://ee-tbcraft.projects.earthengine.app/view/grasslandproductionintensity
+- **Seasonal Water Mapping Tool**  
+  https://ee-tbcraft.projects.earthengine.app/view/floodmapping
 
-2.) Surface Water Mapping
+- **Land Cover Classification Tool**  
+  https://ee-tbcraft.projects.earthengine.app/view/landcoverclassificationapp
 
-Generates flood maps from Landsat SWIR1 imagery with automated cloud masking and composite creation.
+### Earth Engine Code Editor Scripts
 
-https://ee-tbcraft.projects.earthengine.app/view/floodmapping
+To use the GEE scripts:
+- A [Google Earth Engine account](https://code.earthengine.google.com/)
+- Access to the Code Editor for editing and deploying scripts
 
-3.) Land Cover Classification
+Access the underlying GEE scripts for customization:
 
-Interactive land cover classification application with user-created ground training points.
+- **Grassland Productivity Tool Script**  
+  https://code.earthengine.google.com/a0eb88e3af93be5d39d911b2f4b18bf3
 
-https://ee-tbcraft.projects.earthengine.app/view/landcoverclassificationapp
+- **Seasonal Water Mapping Tool Script**  
+  https://code.earthengine.google.com/e24a603dabcf0c22e4431e72d2522af6
 
+- **Land Cover Classification Tool Script**  
+  https://code.earthengine.google.com/a7832e9efc471371b71fed6546b72413
+
+---
+
+## Repository Contents
+
+- `app/` – Source code for R Shiny viewers  
+- `GEE_scripts/` – Optional exports of Earth Engine scripts  
+- `location_data.R` – Movement data processing scripts  
+- `daily_update.yml` – GitHub Actions workflow for weekly updates and deployments  
+- `README.md` – Project overview and documentation
+
+---
+
+## Citation and Archiving
+
+An archived version of this toolkit is available on Zenodo:  
+https://doi.org/10.5281/zenodo.123456 *(latest version)*
+
+Please cite this DOI in publications referencing the toolkit. Version-specific DOIs are also available for reproducibility.
+
+
+## Contact
+
+**Taylor B. Craft**  
+`taylor.b.craft2@gmail.com`
+
+Please reach out with questions or feedback.

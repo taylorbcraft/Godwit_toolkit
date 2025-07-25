@@ -186,15 +186,24 @@ server <- function(input, output, session) {
     # Thin: Keep only one point per bird per day
     if (nrow(df_sf) > 1) {
       df_sf <- df_sf %>%
-        mutate(date = as.Date(timestamp)) %>%
+        mutate(date = as.Date(timestamp),
+               popup_text = paste0(
+                 "<b>trackId:</b> ", trackId, "<br>",
+                 "<b>ring_id:</b> ", ring_id, "<br>",
+                 "<b>date:</b> ", date, "<br>",
+                 "<b>study:</b> <a href='https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study",
+                 study_id, "' target='_blank'>", study_name, "</a><br>",
+                 "<b>sex:</b> ", sex, "<br>",
+                 "<b>tag site:</b> ", tag_site
+               )) %>%
         group_by(trackId, date) %>%
-        slice(1) %>%  # Keep the first point of each day per bird
+        slice(1) %>%
         ungroup()
     }
     
     leafletProxy("map") %>%
       clearGroup("locations") %>%
-      addGlPoints(data = df_sf, group = "locations", popup = TRUE, radius = 5)
+      addGlPoints(data = df_sf, group = "locations", popup = ~popup_text, radius = 5)
   })
   
   observeEvent(input$basemap, {

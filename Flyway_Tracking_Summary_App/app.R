@@ -364,6 +364,53 @@ server <- function(input, output, session) {
     return(summary_table)
   })
   
+  visit_summary_all_years <- reactive({
+    req(data(), rv$aoi)
+    df_all <- as.data.frame(data())
+    if (nrow(df_all) == 0) return(NULL)
+    df_all$row_id <- seq_len(nrow(df_all))
+    df_all_sf <- st_as_sf(df_all, coords = c("location_long", "location_lat"), crs = 4326)
+    if (!st_is_valid(rv$aoi)) rv$aoi <- st_make_valid(rv$aoi)
+    df_all$in_aoi <- lengths(st_intersects(df_all_sf, rv$aoi)) > 0
+    if (sum(df_all$in_aoi, na.rm = TRUE) == 0) return(NULL)
+    df_all$timestamp <- as.POSIXct(df_all$timestamp)
+    df_all <- df_all[order(df_all$trackId, df_all$timestamp), ]
+    df_all <- df_all %>%
+      group_by(trackId) %>%
+      mutate(
+        in_aoi_shift = lag(in_aoi, default = FALSE),
+        visit_start_flag = in_aoi & !in_aoi_shift,
+        visit_id = cumsum(visit_start_flag)
+      ) %>%
+      mutate(visit_id = ifelse(in_aoi, visit_id, NA_integer_)) %>%
+      ungroup()
+    visit_table <- df_all %>%
+      filter(!is.na(visit_id)) %>%
+      group_by(trackId, visit_id) %>%
+      summarise(
+        visit_start = min(timestamp),
+        visit_end = max(timestamp),
+        duration_days = ceiling(as.numeric(difftime(max(timestamp), min(timestamp), units = "days"))),
+        n_fixes = n(),
+        .groups = "drop"
+      )
+    visit_counts <- visit_table %>%
+      group_by(trackId) %>%
+      summarise(
+        n_visits = n(),
+        total_fixes = sum(n_fixes),
+        .groups = "drop"
+      )
+    summary_table <- left_join(visit_table, visit_counts, by = "trackId") %>%
+      mutate(
+        visit_start = as.Date(visit_start),
+        visit_end = as.Date(visit_end)
+      ) %>%
+      select(trackId, n_visits, total_fixes, visit_start, visit_end, duration_days, n_fixes)
+    return(summary_table)
+  })
+  
+  
   observeEvent(input$map_draw_new_feature, {
     if (input$country_aoi == "Custom") {
       coords <- input$map_draw_new_feature$geometry$coordinates[[1]]
@@ -382,13 +429,17 @@ server <- function(input, output, session) {
   output$download_visits_ui <- renderUI({
     df_aoi <- tryCatch(filtered_data_aoi(), error = function(e) NULL)
     if (!is.null(rv$aoi) && !is.null(df_aoi) && nrow(df_aoi) > 0) {
-      downloadButton("download_visits", "download aoi visit summary")
+      tagList(
+        downloadButton("download_visits", "Download AOI Visit Summary (Selected Year)"),
+        downloadButton("download_visits_all_years", "Download AOI Visit Summary (All Years)")
+      )
     }
   })
   
+  
   output$download_visits <- downloadHandler(
     filename = function() {
-      paste0("aoi_visit_summary_", Sys.Date(), ".csv")
+      paste0("aoi_visit_summary.csv")
     },
     content = function(file) {
       visit_data <- tryCatch(isolate(visit_summary()), error = function(e) NULL)
@@ -399,6 +450,21 @@ server <- function(input, output, session) {
       }
     }
   )
+  
+  output$download_visits_all_years <- downloadHandler(
+    filename = function() {
+      paste0("aoi_visit_summary_all_years.csv")
+    },
+    content = function(file) {
+      visit_data <- tryCatch(isolate(visit_summary_all_years()), error = function(e) NULL)
+      if (!is.null(visit_data)) {
+        fwrite(visit_data, file)
+      } else {
+        fwrite(data.frame(note = "no data available or aoi not defined"), file)
+      }
+    }
+  )
+  
 }
 
 # run the app

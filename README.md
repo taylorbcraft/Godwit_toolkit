@@ -81,6 +81,6 @@ Please cite this DOI in publications referencing the toolkit. Version-specific D
 ## Contact
 
 **Taylor B. Craft**  
-`taylor.b.craft2@gmail.com`
+`taylor.craft.mail@gmail.com`
 
 Please reach out with questions or feedback.

@@ -44,9 +44,8 @@ Browser-based tools for generating and exporting environmental raster layers:
 
 ### Earth Engine Code Editor Scripts
 
-To use the GEE scripts:
-- A [Google Earth Engine account](https://code.earthengine.google.com/)
-- Access to the Code Editor for editing and deploying scripts
+To use the GEE scripts, sign up for a free GEE acount at:
+[Google Earth Engine account](https://code.earthengine.google.com/)
 
 Access the underlying GEE scripts for customization:
 

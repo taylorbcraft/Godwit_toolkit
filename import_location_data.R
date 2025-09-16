@@ -7,54 +7,64 @@ library(rnaturalearth)
 library(sf)
 cat("Starting import script\n")
 
-
-
-# movebank login
+# Movebank login
 login <- movebankLogin(username = "t.b.craft", password = "GodwitSnl24!!")
 cat("Login successful\n")
 
-# load each study
-ib19 <- as.data.table(as.data.frame(getMovebankData(study = 652989041, login = login, removeDuplicatedTimestamps = TRUE)))
+# Helper to load data and attach study name
+load_study_with_name <- function(study_id, login) {
+  data <- as.data.table(as.data.frame(getMovebankData(study = study_id, login = login, removeDuplicatedTimestamps = TRUE)))
+  study_info <- getMovebankStudy(study_id, login = login)
+  data[, `:=`(
+    study_name = study_info$name,
+    study_id = study_id  # capture the numeric ID
+  )]
+  return(data)
+}
+
+
+# Load all studies
+ib19 <- load_study_with_name(652989041, login)
 cat("First study downloaded\n")
-microwave2021 <- as.data.table(as.data.frame(getMovebankData(study = 1498143083, login = login, removeDuplicatedTimestamps = TRUE)))
-extremadura2022 <- as.data.table(as.data.frame(getMovebankData(study = 1923591036, login = login, removeDuplicatedTimestamps = TRUE)))
-extremadura2023 <- as.data.table(as.data.frame(getMovebankData(study = 2638950465, login = login, removeDuplicatedTimestamps = TRUE)))
-southholland2021 <- as.data.table(as.data.frame(getMovebankData(study = 1145538280, login = login, removeDuplicatedTimestamps = TRUE)))
-BtgTagus2021 <- as.data.table(as.data.frame(getMovebankData(study = 1693518103, login = login, removeDuplicatedTimestamps = TRUE)))
-ad_dum2018 <- as.data.table(as.data.frame(getMovebankData(study = 484019425, login = login, removeDuplicatedTimestamps = TRUE)))
-ad_dum2019 <- as.data.table(as.data.frame(getMovebankData(study = 831990025, login = login, removeDuplicatedTimestamps = TRUE)))
-ad_dum2020 <- as.data.table(as.data.frame(getMovebankData(study = 1105026166, login = login, removeDuplicatedTimestamps = TRUE)))
-ad_dum2021 <- as.data.table(as.data.frame(getMovebankData(study = 1482506572, login = login, removeDuplicatedTimestamps = TRUE)))
-ad_dum2022 <- as.data.table(as.data.frame(getMovebankData(study = 1751337831, login = login, removeDuplicatedTimestamps = TRUE)))
-ad_dum2023 <- as.data.table(as.data.frame(getMovebankData(study = 2635621808, login = login, removeDuplicatedTimestamps = TRUE)))
-ad_dum2024 <- as.data.table(as.data.frame(getMovebankData(study = 3626635334, login = login, removeDuplicatedTimestamps = TRUE)))
-ch_dum2018 <- as.data.table(as.data.frame(getMovebankData(study = 500187586, login = login, removeDuplicatedTimestamps = TRUE)))
-ch_dum2019 <- as.data.table(as.data.frame(getMovebankData(study = 878914763, login = login, removeDuplicatedTimestamps = TRUE)))
-ch_dum2020 <- as.data.table(as.data.frame(getMovebankData(study = 1183466126, login = login, removeDuplicatedTimestamps = TRUE)))
-ch_dum2021 <- as.data.table(as.data.frame(getMovebankData(study = 1482505185, login = login, removeDuplicatedTimestamps = TRUE)))
-ch_dum2022 <- as.data.table(as.data.frame(getMovebankData(study = 2098519852, login = login, removeDuplicatedTimestamps = TRUE)))
-ch_dum2023 <- as.data.table(as.data.frame(getMovebankData(study = 2791727214, login = login, removeDuplicatedTimestamps = TRUE)))
-ch_dum2024 <- as.data.table(as.data.frame(getMovebankData(study = 3864855585, login = login, removeDuplicatedTimestamps = TRUE)))
-hmadults <- as.data.table(as.data.frame(getMovebankData(study = 69402287, login = login, removeDuplicatedTimestamps = TRUE)))
-hrjuv <- as.data.table(as.data.frame(getMovebankData(study = 76429224, login = login, removeDuplicatedTimestamps = TRUE)))
-hrjuv2016 <- as.data.table(as.data.frame(getMovebankData(study = 175328223, login = login, removeDuplicatedTimestamps = TRUE)))
-hrjuv2017 <- as.data.table(as.data.frame(getMovebankData(study = 293970900, login = login, removeDuplicatedTimestamps = TRUE)))
-HQXS_Black_tailed_godwits <- as.data.table(as.data.frame(getMovebankData(study = 1658294759, login = login, removeDuplicatedTimestamps = TRUE)))
-iberiaBlackwits <- as.data.table(as.data.frame(getMovebankData(study = 49547785, login = login, removeDuplicatedTimestamps = TRUE)))
-icarus <- as.data.table(as.data.frame(getMovebankData(study = 1487044886, login = login, removeDuplicatedTimestamps = TRUE)))
-polish <- as.data.table(as.data.frame(getMovebankData(study = 163516781, login = login, removeDuplicatedTimestamps = TRUE)))
-teamPiersmaHQXS <- as.data.table(as.data.frame(getMovebankData(study = 1563249841, login = login, removeDuplicatedTimestamps = TRUE)))
-teamPiersmaHQXS2022 <- as.data.table(as.data.frame(getMovebankData(study = 2083443328, login = login, removeDuplicatedTimestamps = TRUE)))
-teamPiersmaHQXS2023 <- as.data.table(as.data.frame(getMovebankData(study = 2654984909, login = login, removeDuplicatedTimestamps = TRUE)))
-teamPiersmaHQXS2024 <- as.data.table(as.data.frame(getMovebankData(study = 3395897563, login = login, removeDuplicatedTimestamps = TRUE)))
-teamPiersmaInterrex2023 <- as.data.table(as.data.frame(getMovebankData(study = 2621200322, login = login, removeDuplicatedTimestamps = TRUE)))
-wildjuv <- as.data.table(as.data.frame(getMovebankData(study = 75360602, login = login, removeDuplicatedTimestamps = TRUE)))
-wildjuv2016 <- as.data.table(as.data.frame(getMovebankData(study = 170829089, login = login, removeDuplicatedTimestamps = TRUE)))
-wildjuv2017 <- as.data.table(as.data.frame(getMovebankData(study = 282596404, login = login, removeDuplicatedTimestamps = TRUE)))
-VeenVitaal2023 <- as.data.table(as.data.frame(getMovebankData(study = 2749104371, login = login, removeDuplicatedTimestamps = TRUE)))
+microwave2021 <- load_study_with_name(1498143083, login)
+extremadura2022 <- load_study_with_name(1923591036, login)
+extremadura2023 <- load_study_with_name(2638950465, login)
+southholland2021 <- load_study_with_name(1145538280, login)
+BtgTagus2021 <- load_study_with_name(1693518103, login)
+ad_dum2018 <- load_study_with_name(484019425, login)
+ad_dum2019 <- load_study_with_name(831990025, login)
+ad_dum2020 <- load_study_with_name(1105026166, login)
+ad_dum2021 <- load_study_with_name(1482506572, login)
+ad_dum2022 <- load_study_with_name(1751337831, login)
+ad_dum2023 <- load_study_with_name(2635621808, login)
+ad_dum2024 <- load_study_with_name(3626635334, login)
+ch_dum2018 <- load_study_with_name(500187586, login)
+ch_dum2019 <- load_study_with_name(878914763, login)
+ch_dum2020 <- load_study_with_name(1183466126, login)
+ch_dum2021 <- load_study_with_name(1482505185, login)
+ch_dum2022 <- load_study_with_name(2098519852, login)
+ch_dum2023 <- load_study_with_name(2791727214, login)
+ch_dum2024 <- load_study_with_name(3864855585, login)
+hmadults <- load_study_with_name(69402287, login)
+hrjuv <- load_study_with_name(76429224, login)
+hrjuv2016 <- load_study_with_name(175328223, login)
+hrjuv2017 <- load_study_with_name(293970900, login)
+HQXS_Black_tailed_godwits <- load_study_with_name(1658294759, login)
+iberiaBlackwits <- load_study_with_name(49547785, login)
+icarus <- load_study_with_name(1487044886, login)
+polish <- load_study_with_name(163516781, login)
+teamPiersmaHQXS <- load_study_with_name(1563249841, login)
+teamPiersmaHQXS2022 <- load_study_with_name(2083443328, login)
+teamPiersmaHQXS2023 <- load_study_with_name(2654984909, login)
+teamPiersmaHQXS2024 <- load_study_with_name(3395897563, login)
+teamPiersmaInterrex2023 <- load_study_with_name(2621200322, login)
+wildjuv <- load_study_with_name(75360602, login)
+wildjuv2016 <- load_study_with_name(170829089, login)
+wildjuv2017 <- load_study_with_name(282596404, login)
+VeenVitaal2023 <- load_study_with_name(2749104371, login)
 cat("All studies downloaded\n")
 
-# merge everything
+# Merge all studies
 all_study_data <- rbindlist(list(
   ib19, microwave2021, extremadura2022, extremadura2023, southholland2021, BtgTagus2021,
   ad_dum2018, ad_dum2019, ad_dum2020, ad_dum2021, ad_dum2022, ad_dum2023, ad_dum2024,
@@ -65,10 +75,10 @@ all_study_data <- rbindlist(list(
   teamPiersmaInterrex2023, wildjuv, wildjuv2016, wildjuv2017, VeenVitaal2023
 ), use.names = TRUE, fill = TRUE)
 
-# filter to limosa limosa
+# Filter to limosa limosa
 combined_data <- all_study_data[taxon_detail %in% c("Limosa limosa limosa", NA, "Limosa limosa limos", "ssp. lmosa")]
 
-# remove outliers
+# Remove outliers
 setorder(combined_data, trackId, timestamp)
 combined_data[, `:=`(
   location_lat_mean_5d = zoo::rollapply(location_lat, 5, mean, fill = NA),
@@ -84,7 +94,7 @@ combined_data_filter <- combined_data[outlier == "normal"]
 combined_data_filter[, year := year(timestamp)]
 combined_data_filter <- unique(combined_data_filter)
 
-# remove low quality and in-flight
+# Filter low quality / in-flight
 combined_data_filter <- combined_data_filter[
   (is.na(argos_lc) | !(argos_lc %in% c("A", "B", "C", "Z"))) &
     (is.na(argos_lc) | (argos_lc %in% c("1", "2", "3"))) &
@@ -92,11 +102,11 @@ combined_data_filter <- combined_data_filter[
     (is.na(argos_altitude) | argos_altitude < 100)
 ]
 
-# round timestamps and deduplicate
+# Round timestamp, deduplicate
 combined_data_filter[, timestamp := round_date(timestamp, unit = "hour")]
 combined_data_filter <- unique(combined_data_filter, by = c("trackId", "timestamp"))
 
-# keep 6 per day
+# Keep 6 per day
 combined_data_filter_6 <- combined_data_filter %>%
   mutate(date = as.Date(timestamp)) %>%
   group_by(trackId, date) %>%
@@ -104,12 +114,10 @@ combined_data_filter_6 <- combined_data_filter %>%
   ungroup() %>%
   dplyr::select(-date)
 
-combined_data_filter_6 <- combined_data_filter
+combined_data_filter_6 <- combined_data_filter_6 %>%
+  dplyr::select(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor, study_name, study_id)
 
-# remove unnecessary columns
-combined_data_filter_6 <- combined_data_filter_6[, .(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor)]
-
-# add tagging site
+# Add tagging site
 combined_data_sf <- st_as_sf(combined_data_filter_6, coords = c("location_long", "location_lat"), crs = 4326, remove = FALSE)
 world <- st_make_valid(ne_countries(scale = "medium", returnclass = "sf"))
 combined_data_sf <- st_join(combined_data_sf, world["iso_a2"])
@@ -127,15 +135,14 @@ combined_data_with_tag_site <- as.data.table(combined_data_filter_6) %>%
 
 combined_data_with_tag_site[, tag_site := as.factor(tag_site)]
 
-# final export object
-allLocations <- combined_data_with_tag_site[, .(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor, tag_site)]
+# Final export object
+allLocations <- combined_data_with_tag_site[, .(trackId, timestamp, location_lat, location_long, ring_id, sex, sensor, tag_site, study_name, study_id)]
 allLocations[, sex := toupper(trimws(sex))]
 allLocations[sex == "" | sex == "U" | is.na(sex), sex := NA]
 allLocations[, sex := factor(sex, levels = c("M", "F"))]
 
-# export
+# Export
 saveRDS(allLocations, "Doñana_Wetland_Viewer/allLocations.rds")
 saveRDS(allLocations, "Friesland_GPI_App/allLocations.rds")
 saveRDS(allLocations, "Senegal_Delta_Habitat_Use_App/allLocations.rds")
 saveRDS(allLocations, "Flyway_Tracking_Summary_App/allLocations.rds")
-

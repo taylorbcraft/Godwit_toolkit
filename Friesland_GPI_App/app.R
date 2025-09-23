@@ -5,147 +5,126 @@ library(sf)
 library(dplyr)
 library(leafgl)
 library(terra)
+library(ggplot2)
+library(patchwork)
 
 ui <- fluidPage(
-  titlePanel("Friesland Grassland Production Intensity (GPI)"),
+  titlePanel("Grassland Production Intensity Viewer in Southwest Friesland"),
   
   sidebarLayout(
     sidebarPanel(
       h3("Instructions"),
-      p("1. Filter location and GPI data by year and date"),
-      p("2. Use the drawing tools on the map to draw an area of interest (aoi)."),
-      p("3. The number of individuals, number of locations, and histogram of GPI values used by birds within the aoi will be shown."),
+      p("1. Filter location and GPI data by year and date."),
+      p("2. Use the drawing tools on the map to draw an area of interest (AOI)."),
+      p("3. The number of individuals, number of locations, a histogram of GPI values, and a boxplot comparing used vs available locations will be shown."),
       
       uiOutput("year_select"),
-      uiOutput("date_slider"),  # added for the date slider
+      uiOutput("date_slider"),
       uiOutput("file_info"),
       uiOutput("bird_select"),
       
-      selectInput("basemap", "choose basemap", 
+      selectInput("basemap", "Choose basemap", 
                   choices = c("CartoDB Positron" = "CartoDB.Positron",
                               "Esri WorldImagery" = "Esri.WorldImagery"),
                   selected = "CartoDB.Positron")
     ),
     
     mainPanel(
-      shinycssloaders::withSpinner(leafletOutput("map"), type = 6),
+      leafletOutput("map"),
       verbatimTextOutput("summary"),
-      shinycssloaders::withSpinner(plotOutput("gpi_hist", height = "300px"), type = 6)
+      plotOutput("gpi_plots", height = "350px")
     )
   )
 )
 
 server <- function(input, output, session) {
   
-  # load data, filtering for 2021 and newer
+  # load data
   all_locations <- reactive({
     req(file.exists("locations_swf.rds"))
-    data <- readRDS("locations_swf.rds")
+    readRDS("locations_swf.rds")
   })
   
-  # reactive value to store the drawn aoi
   rv <- reactiveValues(aoi = NULL)
   
-  # load all raster files for different years
+  # load rasters
   gpi_rasters <- reactive({
     files <- list.files("gpi_data", pattern = "\\.tif$", full.names = TRUE)
-    validate(
-      need(length(files) > 0, "Loading GPI rasters... please wait")
-    )
+    validate(need(length(files) > 0, "Loading GPI rasters... please wait"))
     
     rasters <- list()
     for (file in files) {
       year <- gsub(".*gpi_(\\d{4})\\.tif$", "\\1", file)
-      r <- terra::rast(file)
+      r <- rast(file)
       r <- projectRasterForLeaflet(r, method = 'bilinear')
       r <- spatSample(r, 100000, method = "regular", as.raster = TRUE)
       rasters[[paste0("gpi_", year)]] <- r
     }
-    
-    return(rasters)
+    rasters
   })
   
-  
-  
-  # update the year selection input based on the uploaded data
+  # year select
   output$year_select <- renderUI({
     req(all_locations())
-    # Get years from location data
     loc_years <- unique(format(all_locations()$timestamp, "%Y"))
-    # Get years from available GPI raster filenames
     raster_files <- list.files("gpi_data", pattern = "gpi_\\d{4}\\.tif$")
     raster_years <- gsub("gpi_(\\d{4})\\.tif", "\\1", raster_files)
-    # Intersect both year sets to ensure both data and rasters exist
     valid_years <- sort(intersect(loc_years, raster_years), decreasing = TRUE)
-    # Append "All Years" to choices
     year_choices <- c(valid_years, "All Years")
-    # Default to most recent valid year
     default_year <- ifelse(length(valid_years) > 0, valid_years[1], "All Years")
     selectInput("year", "Select Year", choices = year_choices, selected = default_year)
   })
   
-  
-  # update the date slider based on the year selection
+  # date slider
   output$date_slider <- renderUI({
-    req(all_locations())
+    req(all_locations(), input$year)
     df <- all_locations()
     if (input$year != "All Years") {
       df <- df %>% filter(format(timestamp, "%Y") == input$year)
     }
-    
-    min_date <- min(df$timestamp)
-    max_date <- max(df$timestamp)
-    
     sliderInput("date_range", "Select Date Range", 
-                min = min_date, max = max_date,
-                value = c(min_date, max_date), 
+                min = min(df$timestamp), max = max(df$timestamp),
+                value = c(min(df$timestamp), max(df$timestamp)), 
                 timeFormat = "%Y-%m-%d", step = 1)
   })
   
+  # filtered data
+  filtered_data <- reactive({
+    req(input$year, input$date_range, all_locations())
+    df <- all_locations()
+    if (input$year != "All Years") {
+      df <- df %>% filter(format(timestamp, "%Y") == input$year)
+    }
+    df %>% filter(timestamp >= as.POSIXct(input$date_range[1]) & 
+                    timestamp <= as.POSIXct(input$date_range[2]))
+  })
+  
+  # bird select
   output$bird_select <- renderUI({
     req(filtered_data())
     birds <- sort(unique(as.character(filtered_data()$trackId)))
-    selectInput("selected_bird", "select individual", 
-                choices = c("All Birds", birds),
-                selected = "All Birds")
+    selectInput("selected_bird", "Select individual", 
+                choices = c("All Birds", birds), selected = "All Birds")
   })
   
+  # bird data
   bird_data <- reactive({
     req(filtered_data())
     df <- filtered_data()
-    
     if (input$selected_bird != "All Birds") {
       df <- df %>% filter(trackId == input$selected_bird)
     }
-    
     if (!is.null(rv$aoi)) {
       df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
       df <- df_sf[st_intersects(df_sf, rv$aoi, sparse = FALSE), ]
     }
-    
     df
   })
   
-  
-  # reactive expression to filter data by the selected year and date range
-  filtered_data <- reactive({
-    req(input$year, input$date_range, all_locations())
-    df <- all_locations()
-    
-    if (input$year != "All Years") {
-      df <- df %>% filter(format(timestamp, "%Y") == input$year)
-    }
-    
-    df <- df %>% filter(timestamp >= as.POSIXct(input$date_range[1]) & 
-                          timestamp <= as.POSIXct(input$date_range[2]))
-    df
-  })
-  
-  # render the leaflet map
+  # map
   output$map <- renderLeaflet({
     req(filtered_data())
     df <- filtered_data()
-    
     if (nrow(df) == 0) {
       return(
         leaflet() %>% addProviderTiles(providers$CartoDB.Positron) %>%
@@ -154,8 +133,6 @@ server <- function(input, output, session) {
     }
     
     df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
-    
-    
     if (input$year == "All Years") {
       selected_raster <- gpi_rasters()[["gpi_2024"]]
     } else {
@@ -164,40 +141,24 @@ server <- function(input, output, session) {
     
     pal <- colorNumeric(palette = "YlGn", domain = values(selected_raster), na.color = "transparent")
     
-    # if a specific bird is selected, filter just that bird
     if (input$selected_bird != "All Birds") {
       df_sf <- df_sf %>% filter(trackId == input$selected_bird)
     }
     
-    # start building the map
     map <- leaflet() %>%
       addProviderTiles(providers[[input$basemap]]) %>%
-      addGlPoints(
-        data = df_sf,
-        group = "locations",
-        popup = TRUE,
-        radius = 3,
-        fillColor = 'cyan'
-      ) %>%
-      addDrawToolbar(
-        targetGroup = "aoi",
-        editOptions = editToolbarOptions(selectedPathOptions = selectedPathOptions()),
-        polylineOptions = FALSE,
-        markerOptions = FALSE,
-        circleMarkerOptions = FALSE
-      ) %>%
+      addGlPoints(data = df_sf, group = "locations", popup = TRUE,
+                  radius = 3, fillColor = 'cyan') %>%
+      addDrawToolbar(targetGroup = "aoi",
+                     editOptions = editToolbarOptions(selectedPathOptions = selectedPathOptions()),
+                     polylineOptions = FALSE, markerOptions = FALSE,
+                     circleMarkerOptions = FALSE) %>%
       addRasterImage(selected_raster, project = FALSE, colors = pal) %>%
-      addLegend(
-        position = "bottomright",
-        pal = pal,
-        values = values(selected_raster),
-        title = "GPI",
-        opacity = 0.7,
-        bins = 2,
-        labFormat = function(type, cuts, p) c("low", "high")
-      )
+      addLegend(position = "bottomright", pal = pal, values = values(selected_raster),
+                title = "GPI", opacity = 0.7, bins = 2,
+                labFormat = function(type, cuts, p) c("low", "high"))
     
-    # highlight selected bird path
+    # add red polyline if single bird selected
     if (input$selected_bird != "All Birds") {
       df_path <- df %>%
         filter(trackId == input$selected_bird) %>%
@@ -210,110 +171,125 @@ server <- function(input, output, session) {
           st_cast("LINESTRING")
         
         map <- map %>%
-          addPolylines(data = df_line, color = "red", weight = 1, group = "selected path")
+          addPolylines(data = df_line, color = "red", weight = 2, group = "selected path")
       }
     }
+    
     map
   })
-
   
-  # update the aoi and recalculate the summary when a new polygon is drawn
+  # AOI updates
   observeEvent(input$map_draw_new_feature, {
     coords <- input$map_draw_new_feature$geometry$coordinates[[1]]
     coords <- matrix(unlist(coords), ncol = 2, byrow = TRUE)
     rv$aoi <- st_as_sf(st_sfc(st_polygon(list(coords)), crs = 4326))
   })
   
-  # calculate and display the summary 
+  # summary
   output$summary <- renderPrint({
     req(filtered_data())
     df <- filtered_data()
-    # if aoi is drawn, restrict points to those within the aoi
     if (!is.null(rv$aoi)) {
       df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
       df <- df_sf[st_intersects(df_sf, rv$aoi, sparse = FALSE), ]
     }
     if (nrow(df) == 0) {
-      cat("no tracks available for the selected time window.\n")
+      cat("No tracks available for the selected time window.\n")
     } else {
-      num_individuals <- length(unique(df$trackId))
-      num_locations <- nrow(df)
-      
-      cat("number of individuals within aoi:", num_individuals, "\n")
-      cat("total number of locations within aoi:", num_locations, "\n")
+      cat("Number of individuals within AOI:", length(unique(df$trackId)), "\n")
+      cat("Total number of locations within AOI:", nrow(df), "\n")
     }
   })
   
-  # render the histogram of gpi values for points that intersect the locations
-  output$gpi_hist <- renderPlot({
-    req(filtered_data())
+  # use vs availability summary
+  use_avail_summary <- reactive({
+    req(bird_data(), input$year)
+    df_sf <- st_as_sf(bird_data(), coords = c("location_long", "location_lat"), crs = 4326)
+    
+    if (input$year == "All Years") {
+      r <- gpi_rasters()[["gpi_2024"]]
+    } else {
+      r <- gpi_rasters()[[paste0("gpi_", input$year)]]
+    }
+    req(r)
+    
+    df_sf <- st_transform(df_sf, crs(r))
+    df_sf$type <- "used"
+    
+    set.seed(42)
+    avail_pts <- spatSample(r,
+                            size = nrow(df_sf) * 10,
+                            method = "random",
+                            as.points = TRUE,
+                            na.rm = TRUE)
+    n_avail <- nrow(avail_pts)
+    
+    avail_sf <- st_as_sf(avail_pts) |>
+      mutate(
+        trackId   = rep(df_sf$trackId, length.out = n_avail),
+        timestamp = rep(df_sf$timestamp, length.out = n_avail),
+        type      = "available"
+      )
+    
+    combined_sf <- rbind(
+      df_sf[, c("trackId", "timestamp", "type", "geometry")],
+      avail_sf[, c("trackId", "timestamp", "type", "geometry")]
+    )
+    
+    vals <- terra::extract(r, vect(combined_sf))
+    combined_sf$gpi_val <- vals[, 2]
+    st_drop_geometry(combined_sf)
+  })
+  
+  # combined histogram + boxplot
+  output$gpi_plots <- renderPlot({
+    req(bird_data(), input$year)
     df <- bird_data()
     if (nrow(df) == 0) {
-      plot.new()
-      text(0.5, 0.5, "no points in selected aoi or timeframe", cex = 1.5)
-      return()
-    }
-    df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
-    
-    # if aoi is drawn, filter points to those within the aoi
-    if (!is.null(rv$aoi)) {
-      df_sf <- df_sf[st_intersects(df_sf, rv$aoi, sparse = FALSE), ]
+      plot.new(); text(0.5, 0.5, "no points in selected AOI or timeframe", cex = 1.5); return()
     }
     
-    # if no points are available, display a message
-    if (nrow(df_sf) == 0) {
-      plot.new()
-      text(0.5, 0.5, "no points in selected aoi or timeframe", cex = 1.5)
-      return()
-    }
-    
-    # select the appropriate raster based on the year
+    # select raster
     if (input$year == "All Years") {
-      selected_raster <- gpi_rasters()[["gpi_2024"]]
+      r <- gpi_rasters()[["gpi_2024"]]
     } else {
-      selected_raster <- gpi_rasters()[[paste0("gpi_", input$year)]]
+      r <- gpi_rasters()[[paste0("gpi_", input$year)]]
+    }
+    req(r)
+    
+    # extract GPI for used points
+    df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326) |>
+      st_transform(crs(r))
+    vals <- terra::extract(r, vect(df_sf))
+    gpi_vals <- vals[, 2]
+    gpi_vals <- gpi_vals[!is.na(gpi_vals)]
+    
+    if (length(gpi_vals) == 0) {
+      plot.new(); text(0.5, 0.5, "no GPI values available", cex = 1.5); return()
     }
     
-    # transform points to the raster's crs to ensure proper extraction
-    df_sf <- st_transform(df_sf, crs(selected_raster))
+    # Histogram
+    p1 <- ggplot(data.frame(gpi_val = gpi_vals), aes(x = gpi_val)) +
+      geom_histogram(fill = "darkgreen", color = "white", bins = 30) +
+      labs(x = "Grassland Production Intensity", y = "Godwit Locations") +
+      theme_minimal(base_size = 14)
     
-    # extract gpi values from the raster at the point locations
-    coords <- st_coordinates(df_sf)
-    ext_vals <- terra::extract(selected_raster, coords)
-    # get the raster layer name
-    raster_name <- names(selected_raster)[1]
-    gpi_values <- ext_vals[[raster_name]]
-    
-    # remove missing values before plotting
-    gpi_values <- gpi_values[!is.na(gpi_values)]
-    
-    # if no valid gpi values remain, display a message
-    if (length(gpi_values) == 0) {
-      plot.new()
-      text(0.5, 0.5, "no gpi values available", cex = 1.5)
-      return()
-    }
-    
-    # scale the gpi values to range from 0 to 1
-    min_val <- min(gpi_values)
-    max_val <- max(gpi_values)
-    # avoid division by zero if all values are identical
-    if (max_val - min_val != 0) {
-      gpi_values_scaled <- (gpi_values - min_val) / (max_val - min_val)
+    # Use vs availability boxplot
+    df_use_avail <- use_avail_summary()
+    if (nrow(df_use_avail) > 0) {
+      df_use_avail$type <- factor(df_use_avail$type, levels = c("used", "available"))
+      
+      p2 <- ggplot(df_use_avail, aes(x = type, y = gpi_val, fill = type)) +
+        geom_boxplot(width = 0.6, outlier.alpha = 0.3) +
+        labs(x = NULL, y = "Grassland Production Intensity") +
+        theme_minimal(base_size = 14) +
+        theme(axis.text.x = element_text(size = 13), legend.position = "none") +
+        scale_fill_manual(values = c("used" = "lightyellow", "available" = "darkgreen"))
+      
+      p1 + p2
     } else {
-      gpi_values_scaled <- rep(0, length(gpi_values))
+      p1
     }
-    
-    # set font sizes
-    par(cex.lab = 1.5, cex.axis = 1.3, cex.main = 1.5)
-    
-    # plot histogram of scaled gpi values with default numeric axis
-    hist(gpi_values_scaled,main = "",
-         xlab = "Grassland Production Intensity", ylab = "Godwit Locations", col = "lightblue", border = "white")
-    
-    # add additional text labels below 0 and 1 without replacing the default tick labels
-    mtext("low", side = 1, at = 0, line = 3, cex = 1.2)
-    mtext("high", side = 1, at = 1, line = 3, cex = 1.2)
   })
 }
 

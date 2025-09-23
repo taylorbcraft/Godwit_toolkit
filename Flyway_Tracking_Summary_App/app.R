@@ -331,15 +331,17 @@ server <- function(input, output, session) {
     req(filtered_data(), rv$aoi)
     df_all <- as.data.frame(filtered_data())
     if (nrow(df_all) == 0) return(NULL)
+    
     df_all$row_id <- seq_len(nrow(df_all))
     df_all_sf <- st_as_sf(df_all, coords = c("location_long", "location_lat"), crs = 4326)
     if (!st_is_valid(rv$aoi)) rv$aoi <- st_make_valid(rv$aoi)
     df_all$in_aoi <- lengths(st_intersects(df_all_sf, rv$aoi)) > 0
     if (sum(df_all$in_aoi, na.rm = TRUE) == 0) return(NULL)
+    
     df_all$timestamp <- as.POSIXct(df_all$timestamp)
     df_all <- df_all[order(df_all$trackId, df_all$timestamp), ]
     df_all <- df_all %>%
-      group_by(trackId) %>%
+      group_by(trackId, study_id, study_name) %>%   # include study info here
       mutate(
         in_aoi_shift = lag(in_aoi, default = FALSE),
         visit_start_flag = in_aoi & !in_aoi_shift,
@@ -347,9 +349,10 @@ server <- function(input, output, session) {
       ) %>%
       mutate(visit_id = ifelse(in_aoi, visit_id, NA_integer_)) %>%
       ungroup()
+    
     visit_table <- df_all %>%
       filter(!is.na(visit_id)) %>%
-      group_by(trackId, visit_id) %>%
+      group_by(trackId, study_id, study_name, visit_id) %>%
       summarise(
         visit_start = min(timestamp),
         visit_end = max(timestamp),
@@ -357,6 +360,7 @@ server <- function(input, output, session) {
         n_fixes = n(),
         .groups = "drop"
       )
+    
     visit_counts <- visit_table %>%
       group_by(trackId) %>%
       summarise(
@@ -364,28 +368,36 @@ server <- function(input, output, session) {
         total_fixes = sum(n_fixes),
         .groups = "drop"
       )
+    
     summary_table <- left_join(visit_table, visit_counts, by = "trackId") %>%
       mutate(
         visit_start = as.Date(visit_start),
-        visit_end = as.Date(visit_end)
+        visit_end = as.Date(visit_end),
+        study_contact = paste0("https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study",
+                            study_id)
       ) %>%
-      select(trackId, n_visits, total_fixes, visit_start, visit_end, duration_days, n_fixes)
+      select(trackId, study_name, n_visits, total_fixes,
+             visit_start, visit_end, duration_days, n_fixes, study_contact)
+    
     return(summary_table)
   })
+  
   
   visit_summary_all_years <- reactive({
     req(data(), rv$aoi)
     df_all <- as.data.frame(data())
     if (nrow(df_all) == 0) return(NULL)
+    
     df_all$row_id <- seq_len(nrow(df_all))
     df_all_sf <- st_as_sf(df_all, coords = c("location_long", "location_lat"), crs = 4326)
     if (!st_is_valid(rv$aoi)) rv$aoi <- st_make_valid(rv$aoi)
     df_all$in_aoi <- lengths(st_intersects(df_all_sf, rv$aoi)) > 0
     if (sum(df_all$in_aoi, na.rm = TRUE) == 0) return(NULL)
+    
     df_all$timestamp <- as.POSIXct(df_all$timestamp)
     df_all <- df_all[order(df_all$trackId, df_all$timestamp), ]
     df_all <- df_all %>%
-      group_by(trackId) %>%
+      group_by(trackId, study_id, study_name) %>%  # include here
       mutate(
         in_aoi_shift = lag(in_aoi, default = FALSE),
         visit_start_flag = in_aoi & !in_aoi_shift,
@@ -393,9 +405,10 @@ server <- function(input, output, session) {
       ) %>%
       mutate(visit_id = ifelse(in_aoi, visit_id, NA_integer_)) %>%
       ungroup()
+    
     visit_table <- df_all %>%
       filter(!is.na(visit_id)) %>%
-      group_by(trackId, visit_id) %>%
+      group_by(trackId, study_id, study_name, visit_id) %>%
       summarise(
         visit_start = min(timestamp),
         visit_end = max(timestamp),
@@ -403,6 +416,7 @@ server <- function(input, output, session) {
         n_fixes = n(),
         .groups = "drop"
       )
+    
     visit_counts <- visit_table %>%
       group_by(trackId) %>%
       summarise(
@@ -410,14 +424,19 @@ server <- function(input, output, session) {
         total_fixes = sum(n_fixes),
         .groups = "drop"
       )
+    
     summary_table <- left_join(visit_table, visit_counts, by = "trackId") %>%
       mutate(
         visit_start = as.Date(visit_start),
-        visit_end = as.Date(visit_end)
+        visit_end = as.Date(visit_end),
+        study_contact = paste0("https://www.movebank.org/cms/webapp?gwt_fragment=page=studies,path=study", study_id)
       ) %>%
-      select(trackId, n_visits, total_fixes, visit_start, visit_end, duration_days, n_fixes)
+      select(trackId, study_name, n_visits, total_fixes,
+             visit_start, visit_end, duration_days, n_fixes, study_contact)
+    
     return(summary_table)
   })
+  
   
   
   observeEvent(input$map_draw_new_feature, {

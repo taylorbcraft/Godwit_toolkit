@@ -8,8 +8,24 @@ library(sf)
 cat("Starting import script\n")
 
 # Movebank login
-login <- movebankLogin(username = "t.b.craft", password = "GodwitSnl24!!")
-cat("Login successful\n")
+# helpers/auth.R
+safe_movebank_login <- function() {
+  user <- Sys.getenv("MOVEBANK_USER", unset = NA)
+  pass <- Sys.getenv("MOVEBANK_PASSWORD", unset = NA)
+  if (is.na(user) || is.na(pass)) {
+    if (interactive()) {
+      if (!requireNamespace("getPass", quietly = TRUE)) install.packages("getPass")
+      user <- getPass::getPass("Movebank username:")
+      pass <- getPass::getPass("Movebank password:")
+    } else {
+      stop("Set MOVEBANK_USER and MOVEBANK_PASSWORD in the environment.")
+    }
+  }
+  move::movebankLogin(username = user, password = pass)
+}
+source("helpers/auth.R")
+login <- safe_movebank_login()
+
 
 # Helper to load data and attach study name
 load_study_with_name <- function(study_id, login) {

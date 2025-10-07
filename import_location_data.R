@@ -5,26 +5,18 @@ library(zoo)
 library(lubridate)
 library(rnaturalearth)
 library(sf)
+
 cat("Starting import script\n")
 
-# Movebank login
-# helpers/auth.R
-safe_movebank_login <- function() {
-  user <- Sys.getenv("MOVEBANK_USER", unset = NA)
-  pass <- Sys.getenv("MOVEBANK_PASSWORD", unset = NA)
-  if (is.na(user) || is.na(pass)) {
-    if (interactive()) {
-      if (!requireNamespace("getPass", quietly = TRUE)) install.packages("getPass")
-      user <- getPass::getPass("Movebank username:")
-      pass <- getPass::getPass("Movebank password:")
-    } else {
-      stop("Set MOVEBANK_USER and MOVEBANK_PASSWORD in the environment.")
-    }
-  }
-  move::movebankLogin(username = user, password = pass)
+# Single auth path: read from env vars set by GitHub Actions secrets
+u <- Sys.getenv("MOVEBANK_USER", "")
+p <- Sys.getenv("MOVEBANK_PASSWORD", "")
+if (!nzchar(u) || !nzchar(p)) {
+  stop("Movebank credentials not found. Set MOVEBANK_USER and MOVEBANK_PASSWORD in GitHub Actions secrets or your local .Renviron.")
 }
-source("helpers/auth.R")
-login <- safe_movebank_login()
+
+# Create Movebank login using those env vars
+login <- move::movebankLogin(username = u, password = p)
 
 
 # Helper to load data and attach study name

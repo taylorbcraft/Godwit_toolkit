@@ -1,6 +1,6 @@
 # Godwit Landscape Toolkit
 
-The **Godwit Toolkit** is an open-source suite of interactive applications designed to support spatial and movement ecology, with a focus on migratory shorebirds such as the Black-tailed Godwit (*Limosa limosa limosa*).
+The Godwit Landscape Toolkit is an open-source suite of interactive applications designed to support spatial and movement ecology, with a focus on migratory shorebirds such as the Black-tailed Godwit (*Limosa limosa limosa*).
 
 It includes:
 

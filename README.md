@@ -7,7 +7,7 @@ It includes:
 - R Shiny Viewers for exploring telemetry data in ecological context  
 - Google Earth Engine (GEE) Tools for generating and exporting environmental raster layers  
 
-The toolkit enables conservation researchers and practitioners to interact with large-scale telemetry and satellite datasets in an intuitive, browser-based format — without requiring advanced geospatial coding expertise.
+The toolkit enables conservation researchers and practitioners to interact with large-scale telemetry and satellite datasets in an intuitive, browser-based format without requiring advanced geospatial coding expertise.
 
 ---
 

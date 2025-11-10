@@ -75,7 +75,7 @@ Access the underlying GEE scripts for customization:
 An archived version of this toolkit is available on Zenodo:  
 https://doi.org/10.5281/zenodo.123456 *(latest version)*
 
-Please cite this DOI in publications referencing the toolkit. Version-specific DOIs are also available for reproducibility.
+Please cite this DOI in publications referencing the toolkit.
 
 
 ## Contact

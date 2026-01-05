@@ -1,13 +1,13 @@
 # Godwit Landscape Toolkit
 
-The **Godwit Toolkit** is an open-source suite of interactive applications designed to support spatial and movement ecology, with a focus on migratory shorebirds such as the Black-tailed Godwit (*Limosa limosa limosa*).
+The Godwit Landscape Toolkit is an open-source suite of interactive applications designed to support spatial and movement ecology, with a focus on migratory shorebirds such as the Black-tailed Godwit (*Limosa limosa limosa*).
 
 It includes:
 
 - R Shiny Viewers for exploring telemetry data in ecological context  
 - Google Earth Engine (GEE) Tools for generating and exporting environmental raster layers  
 
-The toolkit enables conservation researchers and practitioners to interact with large-scale telemetry and satellite datasets in an intuitive, browser-based format — without requiring advanced geospatial coding expertise.
+The toolkit enables conservation researchers and practitioners to interact with large-scale telemetry and satellite datasets in an intuitive, browser-based format without requiring advanced geospatial coding expertise.
 
 ---
 
@@ -75,7 +75,7 @@ Access the underlying GEE scripts for customization:
 An archived version of this toolkit is available on Zenodo:  
 https://doi.org/10.5281/zenodo.123456 *(latest version)*
 
-Please cite this DOI in publications referencing the toolkit. Version-specific DOIs are also available for reproducibility.
+Please cite this DOI in publications referencing the toolkit.
 
 
 ## Contact

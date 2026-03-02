@@ -41,11 +41,9 @@ jobs:
           Rscript -e "install.packages(c(
             'rnaturalearthdata','rnaturalearth','shiny','sf','cronR','move','dplyr',
             'purrr','data.table','zoo','lubridate','mapview','s2','rsconnect',
-            'leaflet','leafgl','terra','ggplot2','plotly','shinycssloaders',
+            'leaflet','leaflet.extras2',leafgl','terra','ggplot2','plotly','shinycssloaders',
             'patchwork','getPass','keyring','getPass'),
             repos='https://cloud.r-project.org', lib='~/R/library')"
-          Rscript -e "install.packages(c('remotes','rsconnect'), repos='https://cloud.r-project.org', lib='~/R/library')"
-          Rscript -e "remotes::install_github('trafficonese/leaflet.extras', upgrade='never', lib='~/R/library')"
 
       - name: Check Movebank env vars
         run: |

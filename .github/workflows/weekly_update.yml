@@ -38,12 +38,13 @@ jobs:
         run: |
           mkdir -p ~/R/library
           echo 'R_LIBS_USER="~/R/library"' >> ~/.Renviron
-          Rscript -e "install.packages(c(
+          Rscript -e "install.packages(c('remotes',
             'rnaturalearthdata','rnaturalearth','shiny','sf','cronR','move','dplyr',
             'purrr','data.table','zoo','lubridate','mapview','s2','rsconnect',
             'leaflet','leaflet.extras2','leafgl','terra','ggplot2','plotly','shinycssloaders',
-            'patchwork','getPass','keyring','getPass'),
+            'patchwork','getPass','keyring'),
             repos='https://cloud.r-project.org', lib='~/R/library')"
+          Rscript -e "remotes::install_github('trafficonese/leaflet.extras@e619a98', lib='~/R/library', upgrade='never')"
 
       - name: Check Movebank env vars
         run: |

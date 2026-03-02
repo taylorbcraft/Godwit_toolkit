@@ -1,6 +1,6 @@
 library(shiny)
 library(leaflet)
-library(leaflet.extras)
+library(leaflet.extras2)
 library(sf)
 library(dplyr)
 library(leafgl)
@@ -149,10 +149,6 @@ server <- function(input, output, session) {
       addProviderTiles(providers[[input$basemap]]) %>%
       addGlPoints(data = df_sf, group = "locations", popup = TRUE,
                   radius = 3, fillColor = 'cyan') %>%
-      addDrawToolbar(targetGroup = "aoi",
-                     editOptions = editToolbarOptions(selectedPathOptions = selectedPathOptions()),
-                     polylineOptions = FALSE, markerOptions = FALSE,
-                     circleMarkerOptions = FALSE) %>%
       addRasterImage(selected_raster, project = FALSE, colors = pal) %>%
       addLegend(position = "bottomright", pal = pal, values = values(selected_raster),
                 title = "GPI", opacity = 0.7, bins = 2,

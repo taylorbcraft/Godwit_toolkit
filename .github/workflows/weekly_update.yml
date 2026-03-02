@@ -34,17 +34,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
 
-      - name: Install R packages
+      - name: Install system dependencies
         run: |
-          mkdir -p ~/R/library
-          echo 'R_LIBS_USER="~/R/library"' >> ~/.Renviron
-          Rscript -e "install.packages(c('remotes',
-            'rnaturalearthdata','rnaturalearth','shiny','sf','cronR','move','dplyr',
-            'purrr','data.table','zoo','lubridate','mapview','s2','rsconnect',
-            'leaflet','leaflet.extras2','leafgl','terra','ggplot2','plotly','shinycssloaders',
-            'patchwork','getPass','keyring'),
-            repos='https://cloud.r-project.org', lib='~/R/library')"
-          Rscript -e "remotes::install_github('trafficonese/leaflet.extras@e619a98', lib='~/R/library', upgrade='never')"
+          sudo apt-get update
+          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
+
+      - name: Restore R packages (renv)
+        run: |
+          Rscript -e "install.packages(c('renv','remotes'), repos='https://cloud.r-project.org')"
+          Rscript -e "renv::restore(prompt = FALSE)"
 
       - name: Check Movebank env vars
         run: |

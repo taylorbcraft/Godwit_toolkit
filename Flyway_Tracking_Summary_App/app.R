@@ -1,5 +1,6 @@
 library(shiny)
 library(leaflet)
+library(leaflet.extras)
 library(leaflet.extras2)
 library(sf)
 library(dplyr)

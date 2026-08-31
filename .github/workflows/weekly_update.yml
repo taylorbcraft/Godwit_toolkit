@@ -45,7 +45,7 @@ jobs:
         uses: r-lib/actions/setup-renv@v2
 
       - name: Install deployment package
-        run: Rscript --vanilla -e "install.packages('rsconnect', repos = 'https://cloud.r-project.org')"
+        run: Rscript -e "install.packages('rsconnect', repos = 'https://cloud.r-project.org')"
 
       - name: Validate source
         run: |
@@ -67,7 +67,7 @@ jobs:
           SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
           SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
         run: |
-          Rscript --vanilla -e "
+          Rscript -e "
             rsconnect::setAccountInfo(
               name = Sys.getenv('SHINYAPPS_ACCOUNT'),
               token = Sys.getenv('SHINYAPPS_TOKEN'),

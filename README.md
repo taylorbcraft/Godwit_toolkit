@@ -1,86 +1,74 @@
-# Godwit Landscape Toolkit
+# Godwit Movement & Environment Explorer
 
-The Godwit Landscape Toolkit is an open-source suite of interactive applications designed to support spatial and movement ecology, with a focus on migratory shorebirds such as the Black-tailed Godwit (*Limosa limosa limosa*).
+The Godwit Movement & Environment Explorer connects Black-tailed Godwit (*Limosa limosa limosa*) tracking data with satellite-derived environmental layers across the East Atlantic flyway.
 
-It includes:
+Application: <https://tbcraft.shinyapps.io/flyway_tracking_summary_app/>
 
-- R Shiny Viewers for exploring telemetry data in ecological context  
-- Google Earth Engine (GEE) Tools for generating and exporting environmental raster layers  
+Satellite Index Explorer: <https://ee-tbcraft.projects.earthengine.app/view/satellite-index-explorer>
 
-The toolkit enables conservation researchers and practitioners to interact with large-scale telemetry and satellite datasets in an intuitive, browser-based format without requiring advanced geospatial coding expertise.
+## Features
 
----
+- filter locations by migration year, date and multiple tagging sites
+- view daily locations or all tracking fixes across the flyway
+- focus the analysis using a country, uploaded boundary or drawn polygon
+- inspect individual movement patterns and visits to selected areas
+- create GPI, NDVI, EVI, NDWI, NDMI, SAVI and SWIR layers in Google Earth Engine
+- sample an uploaded GeoTIFF at filtered daily bird locations
+- review overlap maps, selection statistics and encountered-value distributions
 
-## R Shiny Applications
+## Environment workflow
 
-Interactive viewers for exploring godwit movement data in relation to environmental variables:
+1. Open the **Environment** tab.
+2. Define a satellite, index, period and search location in the embedded Satellite Index Explorer.
+3. Draw a rectangle or polygon around the required area. Clipping keeps the image small enough to download and upload.
+4. Download the single-band GeoTIFF and upload it to the Shiny application.
+5. Review the satellite layer, sampled daily bird locations, summary metrics and value distribution.
 
-- **Flyway Movement Viewer**  
-  https://tbcraft.shinyapps.io/flyway_tracking_summary_app/
+The application identifies the index from the GeoTIFF band name or Earth Engine filename. Raster maps use fixed index-specific display ranges, while statistics retain the original sampled values. Uploaded rasters remain temporary session files and are not committed to the repository.
 
-- **Friesland Grassland Productivity Viewer**  
-  https://tbcraft.shinyapps.io/Friesland_GPI_App/
+```text
+Google Earth Engine ──► clipped single-band GeoTIFF
+                                  │
+                                  ▼
+Movebank telemetry ──► filtered bird-day extraction ──► maps and summaries
+```
 
-- **Doñana Wetland Viewer**  
-  https://tbcraft.shinyapps.io/Donana_Wetland_Viewer/
+## Repository structure
 
-- **Senegal Delta Habitat Viewer**  
-  https://tbcraft.shinyapps.io/Senegal_Delta_Habitat_Use_App/
+```text
+Flyway_Tracking_Summary_App/       Active Shiny application and required data
+GEE_code/                          Maintained Satellite Index Explorer source
+archive/legacy_toolkit/            Retired application and utility source code
+.github/workflows/                 Data refresh and Shiny deployment workflow
+import_location_data.R             Movebank import and quality control
+renv.lock                          Reproducible R package versions
+```
 
----
+Large retired rasters, regional movement extracts, generated geospatial files and local deployment metadata are excluded from the active repository.
 
-## Google Earth Engine Applications
+## Run locally
 
-Browser-based tools for generating and exporting environmental raster layers:
+Restore the R environment from the repository root, then launch the application:
 
-- **Grassland Productivity Tool**  
-  https://ee-tbcraft.projects.earthengine.app/view/grasslandproductionintensity
+```r
+renv::restore()
+shiny::runApp("Flyway_Tracking_Summary_App")
+```
 
-- **Seasonal Water Mapping Tool**  
-  https://ee-tbcraft.projects.earthengine.app/view/floodmapping
+The application reads `Flyway_Tracking_Summary_App/allLocations.rds` and `Flyway_Tracking_Summary_App/countries_sf.rds` at startup.
 
-- **Land Cover Classification Tool**  
-  https://ee-tbcraft.projects.earthengine.app/view/landcoverclassificationapp
+## Automated deployment
 
-### Earth Engine Code Editor Scripts
+The GitHub Actions workflow validates the active R and JavaScript source and deploys the application to shinyapps.io:
 
-To use the GEE scripts, sign up for a free GEE acount at:
-[Google Earth Engine registration](https://code.earthengine.google.com/)
+- pushes affecting the active app, import script, dependency lockfile or workflow deploy the checked-in movement dataset
+- scheduled and manually dispatched runs retrieve current Movebank data before deployment
+- scheduled refreshes run every Monday at 00:00 UTC
 
-Access the underlying GEE scripts for customization:
-
-- **Grassland Productivity Tool Script**  
-  https://code.earthengine.google.com/a0eb88e3af93be5d39d911b2f4b18bf3
-
-- **Seasonal Water Mapping Tool Script**  
-  https://code.earthengine.google.com/e24a603dabcf0c22e4431e72d2522af6
-
-- **Land Cover Classification Tool Script**  
-  https://code.earthengine.google.com/a7832e9efc471371b71fed6546b72413
-
----
-
-## Repository Contents
-
-- `app/` – Source code for R Shiny viewers  
-- `GEE_scripts/` – Optional exports of Earth Engine scripts  
-- `location_data.R` – Movement data processing scripts  
-- `daily_update.yml` – GitHub Actions workflow for weekly updates and deployments  
-- `README.md` – Project overview and documentation
-
----
-
-## Citation and Archiving
-
-An archived version of this toolkit is available on Zenodo:  
-https://doi.org/10.5281/zenodo.123456 *(latest version)*
-
-Please cite this DOI in publications referencing the toolkit.
-
+Deployment requires the `MOVEBANK_USER`, `MOVEBANK_PASSWORD`, `SHINYAPPS_ACCOUNT`, `SHINYAPPS_TOKEN` and `SHINYAPPS_SECRET` repository secrets.
 
 ## Contact
 
-**Taylor B. Craft**  
-`taylor.craft.mail@gmail.com`
+Taylor B. Craft
 
-Please reach out with questions or feedback.
+<taylor.craft.mail@gmail.com>

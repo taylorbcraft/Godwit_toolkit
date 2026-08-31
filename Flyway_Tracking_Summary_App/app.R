@@ -11,6 +11,8 @@ library(data.table)
 library(DT)
 library(shinycssloaders)
 
+options(shiny.maxRequestSize = 100 * 1024^2)
+
 # load and prepare movement data
 all_data <- readRDS("allLocations.rds")
 setDT(all_data)
@@ -34,6 +36,15 @@ migration_years <- sort(unique(all_data$migration_year))
 tag_sites <- sort(unique(as.character(na.omit(all_data$tag_site))))
 default_migration_year <- tail(migration_years, 1)
 default_year_dates <- range(all_data[migration_year == default_migration_year]$date)
+index_display_ranges <- list(
+  GPI = c(708, 741),
+  NDVI = c(-0.2, 0.9),
+  EVI = c(-0.2, 1),
+  NDWI = c(-0.5, 0.8),
+  NDMI = c(-0.5, 0.8),
+  SAVI = c(-0.2, 1),
+  SWIR = c(0, 0.3)
+)
 
 filter_to_aoi <- function(df, aoi) {
   if (is.null(aoi) || nrow(df) == 0) {
@@ -128,17 +139,23 @@ ui <- page_fillable(
       .bslib-sidebar-layout > .sidebar { border-right: 1px solid #dde4e2; }
       .control-label { font-weight: 600; color: #33484c; }
       .filter-help { color: #66787b; font-size: .9rem; line-height: 1.35; }
-      .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
-      .metric-card { border: 0; box-shadow: 0 2px 10px rgba(24, 46, 49, .08); }
-      .metric-card .card-body { padding: .8rem 1rem; }
-      .metric-label { color: #66787b; font-size: .78rem; font-weight: 700;
+      .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+      .metric-card { --bslib-card-spacer-y: .2rem; --bslib-card-spacer-x: .55rem;
+        min-height: 0; border: 0; box-shadow: 0 1px 6px rgba(24, 46, 49, .07); }
+      .metric-card .card-body { min-height: 0; padding: .2rem .55rem !important; }
+      .metric-label { color: #66787b; font-size: .62rem; font-weight: 700;
         letter-spacing: .04em; text-transform: uppercase; }
-      .metric-value { color: #203033; font-size: 1.65rem; font-weight: 700; line-height: 1.2; }
+      .metric-value { color: #203033; font-size: 1.05rem; font-weight: 700; line-height: 1.05; }
       .map-card { overflow: hidden; border: 0; box-shadow: 0 3px 16px rgba(24, 46, 49, .10); }
       .map-card .card-body { padding: 0; }
       .analysis-card { border: 0; box-shadow: 0 2px 12px rgba(24, 46, 49, .08); }
       .empty-state { padding: 2rem; color: #66787b; text-align: center; }
       .download-stack .btn { width: 100%; margin-bottom: .5rem; }
+      .gee-frame { width: 100%; height: 820px; border: 1px solid #d7dfdd;
+        border-radius: .4rem; background: white; }
+      .workflow-step { color: #66787b; font-size: .9rem; margin: 0; }
+      details > summary { cursor: pointer; color: #33484c; font-weight: 600; }
+      details[open] > summary { margin-bottom: 1rem; }
       @media (max-width: 900px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
     "))
   ),
@@ -146,13 +163,29 @@ ui <- page_fillable(
     class = "app-header",
     div(
       class = "app-title",
-      span("Godwit Movement Explorer")
+      span("Godwit Movement & Environment Explorer")
     )
   ),
   layout_sidebar(
       sidebar = sidebar(
         width = 330,
         open = "desktop",
+        tags$details(
+          open = NA,
+          tags$summary("About this app"),
+          p(
+            class = "filter-help mt-2",
+            "Explore godwit movements, filter locations by time, tagging site or area, and compare godwit tracks with satellite layers"
+          ),
+          tags$ol(
+            class = "filter-help ps-3",
+            tags$li("Filter the movement records."),
+            tags$li("Draw, choose or upload an area when needed."),
+            tags$li("Create and upload a clipped image in the Environment tab."),
+            tags$li("Review sampled values or download a summary.")
+          )
+        ),
+        hr(),
         h5("Movement filters"),
         selectInput(
           "migration_year",
@@ -168,46 +201,50 @@ ui <- page_fillable(
           value = default_year_dates,
           timeFormat = "%d %b %Y"
         ),
-        selectInput(
-          "tag_site",
-          "Tagging site",
-          choices = c("All sites" = "All", tag_sites),
-          selected = "All"
-        ),
-        hr(),
-        h5("Area of interest"),
-        p(class = "filter-help", "Choose a country, upload a boundary, or draw a polygon on the map."),
         selectizeInput(
-          "country_aoi",
-          "Country",
-          choices = c("No country selected" = "Custom", country_names),
-          selected = "Custom"
-        ),
-        fileInput(
-          "aoi_upload",
-          "Upload AOI",
+          "tag_site",
+          "Tagging sites",
+          choices = tag_sites,
+          selected = tag_sites,
           multiple = TRUE,
-          accept = c(".shp", ".dbf", ".shx", ".prj", ".geojson", ".json", ".gpkg", ".kml", ".gml")
+          options = list(plugins = list("remove_button"), placeholder = "Choose tagging sites")
         ),
-        actionButton("clear_aoi", "Clear AOI", class = "btn-outline-secondary w-100"),
-        hr(),
-        h5("Map display"),
-        selectInput(
-          "basemap",
-          "Basemap",
-          choices = c(
-            "OpenStreetMap" = "OpenStreetMap.Mapnik",
-            "Satellite" = "Esri.WorldImagery"
+        tags$details(
+          tags$summary("Focus on an area"),
+          p(class = "filter-help mt-2", "Choose a country, upload a boundary, or draw a polygon on the map."),
+          selectizeInput(
+            "country_aoi",
+            "Country",
+            choices = c("No country selected" = "Custom", country_names),
+            selected = "Custom"
           ),
-          selected = "OpenStreetMap.Mapnik"
+          fileInput(
+            "aoi_upload",
+            "Upload AOI",
+            multiple = TRUE,
+            accept = c(".shp", ".dbf", ".shx", ".prj", ".geojson", ".json", ".gpkg", ".kml", ".gml")
+          ),
+          actionButton("clear_aoi", "Clear AOI", class = "btn-outline-secondary w-100")
         ),
-        radioButtons(
-          "map_detail",
-          "Location detail",
-          choices = c("Daily locations" = "daily", "All fixes" = "all"),
-          selected = "daily"
+        tags$details(
+          tags$summary("Map options"),
+          selectInput(
+            "basemap",
+            "Basemap",
+            choices = c(
+              "OpenStreetMap" = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              "Satellite" = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            ),
+            selected = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          ),
+          radioButtons(
+            "map_detail",
+            "Location detail",
+            choices = c("Daily locations" = "daily", "All fixes" = "all"),
+            selected = "daily"
+          ),
+          p(class = "filter-help", "Daily locations are faster and recommended at flyway scale.")
         ),
-        p(class = "filter-help", "Daily locations are faster and recommended at flyway scale."),
         hr(),
         uiOutput("download_visits_ui")
       ),
@@ -225,20 +262,76 @@ ui <- page_fillable(
           height = "100%",
           full_screen = TRUE,
           nav_panel(
-            "Map",
-            withSpinner(leafletOutput("map", height = "calc(100vh - 245px)"), type = 6, color = "#b4532a")
+            "Movement",
+            div(
+              class = "p-3 d-flex flex-column gap-3",
+              card(
+                class = "map-card",
+                withSpinner(leafletOutput("map", height = "calc(100vh - 310px)"), type = 6, color = "#b4532a")
+              ),
+              tags$details(
+                tags$summary("Explore movement patterns and visits"),
+                div(
+                  class = "pt-3",
+                  uiOutput("analysis_controls"),
+                  withSpinner(plotlyOutput("lat_plot", height = "360px"), type = 6, color = "#b4532a"),
+                  layout_columns(
+                    card(class = "analysis-card", card_header("Selection summary"), tableOutput("summary_table")),
+                    card(class = "analysis-card", card_header("Visits in the selected area"), uiOutput("visit_controls"), DTOutput("visit_table")),
+                    col_widths = c(4, 8)
+                  )
+                )
+              )
+            )
           ),
           nav_panel(
-            "Movement and visits",
+            "Environment",
             div(
-              class = "p-3",
-              uiOutput("analysis_controls"),
-              withSpinner(plotlyOutput("lat_plot", height = "360px"), type = 6, color = "#b4532a"),
-              layout_columns(
-                card(class = "analysis-card", card_header("Selection summary"), tableOutput("summary_table")),
-                card(class = "analysis-card", card_header("AOI visits"), uiOutput("visit_controls"), DTOutput("visit_table")),
-                col_widths = c(4, 8)
-              )
+              class = "p-3 d-flex flex-column gap-3",
+              card(
+                class = "analysis-card",
+                card_header("1. Build a satellite layer in Google Earth Engine"),
+                p(
+                  class = "filter-help",
+                  "Define an area and period and choose an index. Before downloading, draw a clipping area around the area you need. Clipping is required to keep the download size manageable."
+                ),
+                tags$details(
+                  tags$summary("Satellite Index Explorer"),
+                  tags$iframe(
+                    class = "gee-frame",
+                    title = "Google Earth Engine Satellite Index Explorer",
+                    src = "https://ee-tbcraft.projects.earthengine.app/view/satellite-index-explorer",
+                    allow = "fullscreen"
+                  )
+                ),
+                tags$a(
+                  "Open Satellite Index Explorer in separate window",
+                  href = "https://ee-tbcraft.projects.earthengine.app/view/satellite-index-explorer",
+                  target = "_blank",
+                  rel = "noopener noreferrer",
+                  class = "btn btn-outline-secondary btn-sm align-self-start mt-2"
+                )
+              ),
+              card(
+                class = "analysis-card",
+                card_header("2. Upload and analyse the satellite layer"),
+                layout_columns(
+                  fileInput(
+                    "generated_raster",
+                    "Upload the GeoTIFF downloaded from the Satellite Index Explorer",
+                    accept = c(".tif", ".tiff")
+                  ),
+                  div(
+                    p(
+                      class = "filter-help",
+                      "The first raster band is sampled at the currently filtered bird-day locations. Change the movement filters or AOI to update every result below."
+                    ),
+                    uiOutput("generated_raster_status")
+                  ),
+                  col_widths = c(4, 8)
+                )
+              ),
+              uiOutput("generated_raster_results")
             )
           )
         )
@@ -275,8 +368,8 @@ server <- function(input, output, session) {
         date <= date_range[2]
     ]
 
-    if (!is.null(input$tag_site) && input$tag_site != "All") {
-      df <- df[tag_site == input$tag_site]
+    if (!is.null(input$tag_site)) {
+      df <- df[tag_site %chin% input$tag_site]
     }
 
     df
@@ -364,9 +457,10 @@ server <- function(input, output, session) {
   })
 
   output$map <- renderLeaflet({
-    basemap <- if (is.null(input$basemap)) "OpenStreetMap.Mapnik" else input$basemap
+    basemap <- if (is.null(input$basemap)) "https://tile.openstreetmap.org/{z}/{x}/{y}.png" else input$basemap
+    attribution <- if (grepl("arcgisonline", basemap)) "Tiles &copy; Esri" else "&copy; OpenStreetMap contributors"
     leaflet() %>%
-      addProviderTiles(providers[[isolate(basemap)]], layerId = "basemap") %>%
+      addTiles(urlTemplate = isolate(basemap), attribution = attribution, layerId = "basemap") %>%
       setView(lng = 5, lat = 40, zoom = 4) %>%
       addDrawToolbar(
         targetGroup = "aoi",
@@ -379,9 +473,10 @@ server <- function(input, output, session) {
 
   # update basemap independently
   observeEvent(input$basemap, {
+    attribution <- if (grepl("arcgisonline", input$basemap)) "Tiles &copy; Esri" else "&copy; OpenStreetMap contributors"
     leafletProxy("map") %>%
       clearTiles() %>%
-      addProviderTiles(providers[[input$basemap]], layerId = "basemap")
+      addTiles(urlTemplate = input$basemap, attribution = attribution, layerId = "basemap")
   }, ignoreInit = TRUE)
 
   # update AOI independently
@@ -422,6 +517,211 @@ server <- function(input, output, session) {
   output$individual_count <- renderText(format(uniqueN(aoi_filtered_data()$trackId), big.mark = ","))
   output$study_count <- renderText(format(uniqueN(aoi_filtered_data()$study_id), big.mark = ","))
   output$aoi_status <- renderText(rv$aoi_name)
+
+  generated_raster <- reactive({
+    req(input$generated_raster)
+    validate(need(
+      tolower(tools::file_ext(input$generated_raster$name)) %in% c("tif", "tiff"),
+      "Upload a GeoTIFF file."
+    ))
+
+    raster <- tryCatch(
+      terra::rast(input$generated_raster$datapath),
+      error = function(error) NULL
+    )
+    validate(need(!is.null(raster), "The uploaded GeoTIFF could not be read."))
+    validate(need(!is.na(terra::crs(raster)), "The uploaded GeoTIFF has no coordinate reference system."))
+    raster
+  })
+
+  generated_raster_values <- reactive({
+    raster <- generated_raster()
+
+    movement_data <- copy(aoi_filtered_data())
+    validate(need(nrow(movement_data) > 0, "No movement data match the current filters."))
+    daily_locations <- movement_data[order(timestamp), .SD[1], by = .(trackId, date)]
+
+    points <- terra::vect(
+      daily_locations,
+      geom = c("location_long", "location_lat"),
+      crs = "EPSG:4326"
+    )
+    extracted <- terra::extract(raster[[1]], points, ID = FALSE)
+
+    data.table(
+      track_id = as.character(daily_locations$trackId),
+      date = daily_locations$date,
+      longitude = daily_locations$location_long,
+      latitude = daily_locations$location_lat,
+      value = as.numeric(extracted[[1]])
+    )
+  })
+
+  output$generated_raster_status <- renderUI({
+    raster <- generated_raster()
+    values <- generated_raster_values()
+    covered <- sum(!is.na(values$value))
+    p(
+      class = "filter-help",
+      paste0(
+        input$generated_raster$name, " · ", terra::ncol(raster), " × ", terra::nrow(raster),
+        " pixels · ", format(covered, big.mark = ","), " daily bird records inside valid raster cells"
+      )
+    )
+  })
+
+  generated_raster_label <- reactive({
+    supported_indices <- c("GPI", "NDVI", "EVI", "NDWI", "NDMI", "SAVI", "SWIR")
+    raster_text <- toupper(paste(
+      names(generated_raster()),
+      tools::file_path_sans_ext(input$generated_raster$name),
+      collapse = " "
+    ))
+    selected_index <- supported_indices[vapply(
+      supported_indices,
+      function(index) grepl(paste0("(^|[^A-Z0-9])", index, "([^A-Z0-9]|$)"), raster_text),
+      logical(1)
+    )]
+    if (length(selected_index) > 0) {
+      return(selected_index[1])
+    }
+
+    sampled_values <- generated_raster_values()$value
+    sampled_median <- median(sampled_values, na.rm = TRUE)
+    if (is.finite(sampled_median) && abs(sampled_median) > 2) {
+      return("GPI")
+    }
+
+    "Satellite index"
+  })
+
+  output$generated_raster_results <- renderUI({
+    if (is.null(input$generated_raster)) {
+      return(div(
+        class = "empty-state",
+        "Generate a satellite layer in Earth Engine, or upload a GeoTIFF to begin the movement–environment analysis."
+      ))
+    }
+
+    div(
+      class = "d-flex flex-column gap-3",
+      layout_columns(
+        card(
+          class = "analysis-card",
+          card_header("Satellite layer and daily bird records"),
+          withSpinner(leafletOutput("generated_raster_map", height = "600px"), type = 6, color = "#b4532a")
+        ),
+        card(
+          class = "analysis-card",
+          card_header("Selection summary"),
+          tableOutput("generated_raster_summary")
+        ),
+        col_widths = c(8, 4)
+      ),
+      tags$details(
+        tags$summary("Explore results"),
+        div(
+          class = "pt-3",
+          card(
+            class = "analysis-card",
+            withSpinner(plotlyOutput("generated_raster_distribution", height = "340px"), type = 6, color = "#b4532a")
+          )
+        )
+      )
+    )
+  })
+
+  output$generated_raster_summary <- renderTable({
+    all_values <- generated_raster_values()
+    values <- all_values[!is.na(value)]
+    validate(need(nrow(values) > 0, "The raster does not overlap the selected daily bird records."))
+
+    data.frame(
+      Metric = c("Daily bird records sampled", "Individuals", "Median", "Mean", "Range", "Interquartile range"),
+      Value = c(
+        format(nrow(values), big.mark = ","),
+        format(uniqueN(values$track_id), big.mark = ","),
+        round(median(values$value), 3),
+        round(mean(values$value), 3),
+        paste(round(range(values$value), 3), collapse = " – "),
+        paste(round(quantile(values$value, c(0.25, 0.75)), 3), collapse = " – ")
+      )
+    )
+  }, striped = TRUE, bordered = FALSE)
+
+  output$generated_raster_map <- renderLeaflet({
+    raster <- generated_raster()[[1]]
+    values <- generated_raster_values()[!is.na(value)]
+    validate(need(nrow(values) > 0, "The raster does not overlap the selected daily bird records."))
+    display_range <- index_display_ranges[[generated_raster_label()]]
+    if (is.null(display_range)) {
+      display_range <- c(-0.5, 1)
+    }
+
+    display_raster <- raster
+    if (terra::ncell(display_raster) > 600000) {
+      factor <- ceiling(sqrt(terra::ncell(display_raster) / 600000))
+      display_raster <- terra::aggregate(display_raster, fact = factor, fun = mean, na.rm = TRUE)
+    }
+    display_raster <- terra::clamp(
+      display_raster,
+      lower = display_range[1],
+      upper = display_range[2],
+      values = TRUE
+    )
+
+    raster_values <- terra::values(display_raster, na.rm = TRUE)
+    palette <- colorNumeric("viridis", display_range, na.color = "transparent")
+    raster_layer <- raster::raster(display_raster)
+    map_points <- values[, .SD[1], by = .(track_id, date)]
+
+    leaflet() %>%
+      addTiles(
+        urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        attribution = "&copy; OpenStreetMap contributors"
+      ) %>%
+      addRasterImage(raster_layer, colors = palette, opacity = 0.78, project = TRUE) %>%
+      addCircleMarkers(
+        data = map_points,
+        lng = ~longitude,
+        lat = ~latitude,
+        radius = 3,
+        stroke = TRUE,
+        weight = 1,
+        color = "#ffffff",
+        fillColor = "#b4532a",
+        fillOpacity = 0.8,
+        popup = ~paste0(
+          "Bird: ", track_id,
+          "<br>Date: ", date,
+          "<br>", generated_raster_label(), ": ", round(value, 3)
+        )
+      ) %>%
+      addLegend(
+        position = "bottomright",
+        pal = palette,
+        values = display_range,
+        title = generated_raster_label()
+      ) %>%
+      fitBounds(
+        lng1 = min(map_points$longitude),
+        lat1 = min(map_points$latitude),
+        lng2 = max(map_points$longitude),
+        lat2 = max(map_points$latitude)
+      )
+  })
+
+  output$generated_raster_distribution <- renderPlotly({
+    values <- generated_raster_values()[!is.na(value)]
+    validate(need(nrow(values) > 0, "No valid raster values match the current selection."))
+
+    plot <- ggplot(values, aes(x = value)) +
+      geom_histogram(bins = 30, fill = "#607f84", color = "white") +
+      labs(x = generated_raster_label(), y = "Daily bird records") +
+      theme_minimal(base_size = 12)
+
+    ggplotly(plot) %>% config(displaylogo = FALSE)
+  })
 
   output$analysis_controls <- renderUI({
     df <- aoi_filtered_data()

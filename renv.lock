@@ -58,6 +58,11 @@
       "Maintainer": "Kirill Müller <kirill@cynkra.com>",
       "Repository": "CRAN"
     },
+    "DT": {
+      "Package": "DT",
+      "Version": "0.34.0",
+      "Source": "Repository"
+    },
     "KernSmooth": {
       "Package": "KernSmooth",
       "Version": "2.23-26",

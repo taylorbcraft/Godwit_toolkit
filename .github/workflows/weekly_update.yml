@@ -1,14 +1,23 @@
-name: Weekly GPS Update and Deploy to Shinyapps.io
+name: Deploy Flyway Tracking Summary
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # runs once a week, every monday at midnight utc
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
   push:
     branches:
-      - main  # deploy on push to main branch
+      - main
+    paths:
+      - '.github/workflows/weekly_update.yml'
+      - 'Flyway_Tracking_Summary_App/**'
+      - 'renv.lock'
+
+concurrency:
+  group: flyway-tracking-summary-deploy
+  cancel-in-progress: true
 
 jobs:
-  update-gps-data:
+  update-and-deploy:
     runs-on: ubuntu-latest
     env:
       MOVEBANK_USER: ${{ secrets.MOVEBANK_USER }}
@@ -23,80 +32,28 @@ jobs:
         with:
           r-version: '4.4.2'
 
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-
-      - name: Verify Quarto installation
-        run: quarto --version
-
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgdal-dev libproj-dev libgeos-dev libudunits2-dev gdal-bin
+      - name: Restore and cache R packages
+        uses: r-lib/actions/setup-renv@v2
 
-      - name: Restore R packages (renv)
-        run: |
-          Rscript -e "install.packages(c('renv','remotes'), repos='https://cloud.r-project.org')"
-          Rscript -e "renv::restore(prompt = FALSE)"
+      - name: Check Movebank credentials
+        if: github.event_name != 'push'
+        run: Rscript -e "stopifnot(nzchar(Sys.getenv('MOVEBANK_USER')), nzchar(Sys.getenv('MOVEBANK_PASSWORD')))"
 
-      - name: Check Movebank env vars
-        run: |
-          Rscript -e "stopifnot(nzchar(Sys.getenv('MOVEBANK_USER')))"
-          Rscript -e "cat('Authenticating to Movebank as:', Sys.getenv('MOVEBANK_USER'), '\n')"
-
-      - name: Run import_location_data.R
+      - name: Update location data
+        if: github.event_name != 'push'
         run: Rscript import_location_data.R
 
-      - name: Run filter_location_data.R for Doñana_Wetland_Viewer
-        run: Rscript Doñana_Wetland_Viewer/filter_location_data.R
-
-      - name: Run filter_location_data.R for Friesland_GPI_App
-        run: Rscript Friesland_GPI_App/filter_location_data.R
-
-      - name: Run filter_location_data.R for Senegal_Delta_Habitat_Use_App
-        run: Rscript Senegal_Delta_Habitat_Use_App/filter_location_data.R
-
-      - name: Check R environment
-        run: Rscript -e "sessionInfo()"
-
-      - name: Deploy Doñana_Wetland_Viewer to shinyapps.io
+      - name: Deploy Flyway Tracking Summary to shinyapps.io
         run: |
           Rscript -e "library(rsconnect);
                       rsconnect::setAccountInfo(name = '${{ secrets.SHINYAPPS_ACCOUNT }}',
                                                 token = '${{ secrets.SHINYAPPS_TOKEN }}',
                                                 secret = '${{ secrets.SHINYAPPS_SECRET }}');
-                      rsconnect::deployApp(appDir = 'Doñana_Wetland_Viewer', forceUpdate = TRUE)"
-        env:
-          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
-          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
-          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
-
-      - name: Deploy Friesland_GPI_App to shinyapps.io
-        run: |
-          Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'Friesland_GPI_App', forceUpdate = TRUE)"
-        env:
-          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
-          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
-          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
-
-      - name: Deploy Senegal_Delta_Habitat_Use_App to shinyapps.io
-        run: |
-          Rscript -e "library(rsconnect);
-                      rsconnect::deployApp(appDir = 'Senegal_Delta_Habitat_Use_App', forceUpdate = TRUE)"
-        env:
-          SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
-          SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
-          SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
-
-      - name: Deploy Flyway_Tracking_Summary_App to shinyapps.io
-        run: |
-          Rscript -e "library(rsconnect);
                       rsconnect::deployApp(appDir = 'Flyway_Tracking_Summary_App', quarto = NA, forceUpdate = TRUE)"
         env:
           SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}

@@ -2,3 +2,18 @@
 .Rhistory
 .Ruserdata
 .Renviron
+
+# local system files
+.DS_Store
+
+# local build and assistant artifacts
+.codex/
+.codex-*/
+.iwsg-deck-build/
+node_modules/
+*.inspect.ndjson
+
+# presentation and manuscript files
+*.ppt
+*.pptx
+Manuscript/

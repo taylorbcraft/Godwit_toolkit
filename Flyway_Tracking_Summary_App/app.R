@@ -573,8 +573,7 @@ server <- function(input, output, session) {
 
     div(
       class = "download-stack",
-      downloadButton("download_visits", "Download selected-year visits"),
-      downloadButton("download_locations", "Download filtered locations")
+      downloadButton("download_visits", "Download selected-year visits")
     )
   })
 
@@ -589,12 +588,6 @@ server <- function(input, output, session) {
     }
   )
 
-  output$download_locations <- downloadHandler(
-    filename = function() paste0("godwit_locations_", input$migration_year, ".csv"),
-    content = function(file) {
-      fwrite(aoi_filtered_data(), file)
-    }
-  )
 }
 
 shinyApp(ui, server)

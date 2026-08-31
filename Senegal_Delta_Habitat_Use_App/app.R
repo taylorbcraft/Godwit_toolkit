@@ -77,14 +77,14 @@ server <- function(input, output, session) {
     df$season <- sapply(df$timestamp, compute_season)
     seasons <- unique(df$season)
     seasons <- seasons[order(as.numeric(sub("-.*", "", seasons)), decreasing = TRUE)]
-    seasons <- c(seasons, "All years")
+    seasons <- c(seasons, "All Years")
     selectInput("year", "Select year", choices = seasons, selected = seasons[1])
   })
   
   # wet/dry season input
   output$subseason_select <- renderUI({
     selectInput("subseason", "Select season", 
-                choices = c("All", "Wet season (Jul-Nov)", "Dry season (Dec-Jun)"), 
+                choices = c("All", "Wet Season (Jul-Nov)", "Dry Season (Dec-Jun)"), 
                 selected = "All")
   })
   
@@ -222,7 +222,9 @@ server <- function(input, output, session) {
     df_ratio <- data.frame(
       land_cover = land_cover_values,
       land_cover_label = factor(land_cover_labels, levels = land_cover_labels),
-      ratio = as.numeric(used_tab) / as.numeric(avail_tab)
+      ratio = ifelse(as.numeric(avail_tab) > 0,
+                     as.numeric(used_tab) / as.numeric(avail_tab),
+                     NA_real_)
     )
     
     land_cover_colors <- c("darkred", "orange", "chartreuse2", "darkgreen", 

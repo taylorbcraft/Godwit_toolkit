@@ -1,264 +1,849 @@
-//Grassland Production Intensity GEE App code//
+// Sentinel-2 spectral index GEE app
 
 /**** SETUP ****/
-// Center roughly on Europe at zoom level 4
-Map.setCenter(10 /* lon */, 50 /* lat */, 4);
+Map.setCenter(10, 50, 4);
 
-// No AOI until user draws it
 var roi = null;
 var selectedImage = null;
-var clipPolygon = null;  // Stores user-drawn clipping polygon
-
-// Store the user-chosen year and month in these variables
+var selectedCollection = null;
+var clipPolygon = null;
 var chosenYear = null;
 var chosenMonth = null;
+var chosenSatellite = 'Sentinel-2';
+var chosenIndex = 'GPI';
+var chosenProduct = 'Single Scene (LEAST CLOUDY)';
+var drawingStage = 'roi';
+var requestVersion = 0;
 
-// Sentinel-2 SR collection (2016 - mid-2022+)
-var s2Sr = ee.ImageCollection('COPERNICUS/S2_SR');
+var currentYear = new Date().getFullYear();
+var rgbViz = {min: 0, max: 0.3, bands: ['red', 'green', 'blue']};
 
-// Visualization for RGB display
-var viz = {
-  min: 0,
-  max: 3000,
-  bands: ['B4','B3','B2']
+// Collections, dates, bands, and output resolution
+var satelliteOptions = {
+  'Sentinel-2': {
+    collection: 'COPERNICUS/S2_SR_HARMONIZED',
+    startYear: 2017,
+    endYear: currentYear,
+    cloudProperty: 'CLOUDY_PIXEL_PERCENTAGE',
+    sourceBands: ['B2', 'B3', 'B4', 'B8', 'B11', 'B5', 'B6', 'B7'],
+    outputBands: ['blue', 'green', 'red', 'nir', 'swir1',
+      'redEdge1', 'redEdge2', 'redEdge3'],
+    scale: 10,
+    supportsGPI: true
+  },
+  'Landsat 7': {
+    collection: 'LANDSAT/LE07/C02/T1_L2',
+    startYear: 1999,
+    endYear: 2024,
+    cloudProperty: 'CLOUD_COVER',
+    sourceBands: ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5'],
+    outputBands: ['blue', 'green', 'red', 'nir', 'swir1'],
+    scale: 30,
+    supportsGPI: false
+  },
+  'Landsat 8': {
+    collection: 'LANDSAT/LC08/C02/T1_L2',
+    startYear: 2013,
+    endYear: currentYear,
+    cloudProperty: 'CLOUD_COVER',
+    sourceBands: ['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6'],
+    outputBands: ['blue', 'green', 'red', 'nir', 'swir1'],
+    scale: 30,
+    supportsGPI: false
+  },
+  'Landsat 9': {
+    collection: 'LANDSAT/LC09/C02/T1_L2',
+    startYear: 2021,
+    endYear: currentYear,
+    cloudProperty: 'CLOUD_COVER',
+    sourceBands: ['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6'],
+    outputBands: ['blue', 'green', 'red', 'nir', 'swir1'],
+    scale: 30,
+    supportsGPI: false
+  }
 };
 
-// Visualization for GPI
-var gpiViz = {min: 708, max: 741, palette: ['yellow', 'green', 'grey']};
+function maskClouds(image) {
+  if (chosenSatellite === 'Sentinel-2') {
+    var scl = image.select('SCL');
+    var s2Mask = scl.neq(0)
+      .and(scl.neq(1))
+      .and(scl.neq(3))
+      .and(scl.neq(8))
+      .and(scl.neq(9))
+      .and(scl.neq(10))
+      .and(scl.neq(11));
+    return image.updateMask(s2Mask);
+  }
 
-/**** GPI CALCULATION FUNCTION ****/
-function calculateGPI(image) {
-  var B4 = image.select('B4');
-  var B5 = image.select('B5');
-  var B6 = image.select('B6');
-  var B7 = image.select('B7');
+  var qaMask = image.select('QA_PIXEL').bitwiseAnd(63).eq(0);
+  var saturationMask = image.select('QA_RADSAT').eq(0);
+  return image.updateMask(qaMask).updateMask(saturationMask);
+}
 
-  var rep = ee.Image(705).add(
-    ee.Image(35).multiply(
-      ee.Image(B7).add(B4).divide(2).subtract(B5)
-    ).divide(
-      ee.Image(B6).subtract(B5)
-    )
-  );
+function prepareImage(image, applyMask) {
+  var satellite = satelliteOptions[chosenSatellite];
+  image = applyMask ? maskClouds(image) : image;
+  var reflectance = image.select(satellite.sourceBands, satellite.outputBands);
 
-  return image.addBands(rep.rename('GPI'));
+  if (chosenSatellite === 'Sentinel-2') {
+    reflectance = reflectance.multiply(0.0001);
+  } else {
+    reflectance = reflectance.multiply(0.0000275).add(-0.2);
+  }
+
+  return ee.Image(reflectance.copyProperties(image, image.propertyNames()));
+}
+
+// Index formulas and display settings
+var indexOptions = {
+  GPI: {
+    label: 'GPI - Grassland Production Intensity',
+    viz: {min: 708, max: 741, palette: ['yellow', 'green', 'grey']},
+    calculate: function(image) {
+      var red = image.select('red');
+      var redEdge1 = image.select('redEdge1');
+      var redEdge2 = image.select('redEdge2');
+      var redEdge3 = image.select('redEdge3');
+      return ee.Image(705).add(
+        ee.Image(35).multiply(
+          redEdge3.add(red).divide(2).subtract(redEdge1)
+        ).divide(redEdge2.subtract(redEdge1))
+      ).rename('GPI');
+    }
+  },
+  NDVI: {
+    label: 'NDVI - Normalized Difference Vegetation Index',
+    viz: {min: -0.2, max: 0.9, palette: ['brown', 'yellow', 'green']},
+    calculate: function(image) {
+      return image.expression('(nir - red) / (nir + red)', {
+        nir: image.select('nir'),
+        red: image.select('red')
+      }).rename('NDVI');
+    }
+  },
+  EVI: {
+    label: 'EVI - Enhanced Vegetation Index',
+    viz: {min: -0.2, max: 1, palette: ['brown', 'yellow', 'darkgreen']},
+    calculate: function(image) {
+      return image.expression(
+        '2.5 * ((nir - red) / (nir + 6 * red - 7.5 * blue + 1))', {
+          nir: image.select('nir'),
+          red: image.select('red'),
+          blue: image.select('blue')
+        }
+      ).rename('EVI');
+    }
+  },
+  NDWI: {
+    label: 'NDWI - Normalized Difference Water Index',
+    viz: {min: -0.5, max: 0.8, palette: ['brown', 'white', 'blue']},
+    calculate: function(image) {
+      return image.expression('(green - nir) / (green + nir)', {
+        green: image.select('green'),
+        nir: image.select('nir')
+      }).rename('NDWI');
+    }
+  },
+  NDMI: {
+    label: 'NDMI - Normalized Difference Moisture Index',
+    viz: {min: -0.5, max: 0.8, palette: ['brown', 'yellow', 'blue']},
+    calculate: function(image) {
+      return image.expression('(nir - swir1) / (nir + swir1)', {
+        nir: image.select('nir'),
+        swir1: image.select('swir1')
+      }).rename('NDMI');
+    }
+  },
+  SAVI: {
+    label: 'SAVI - Soil Adjusted Vegetation Index',
+    viz: {min: -0.2, max: 1, palette: ['brown', 'yellow', 'green']},
+    calculate: function(image) {
+      return image.expression(
+        '1.5 * ((nir - red) / (nir + red + 0.5))', {
+          nir: image.select('nir'),
+          red: image.select('red')
+        }
+      ).rename('SAVI');
+    }
+  },
+  SWIR: {
+    label: 'SWIR - Surface Water',
+    viz: {min: 0, max: 0.3, palette: ['081d58', '41b6c4', 'ffffd9']},
+    calculate: function(image) {
+      return image.select('swir1').rename('SWIR');
+    }
+  }
+};
+
+var indexNames = Object.keys(indexOptions).filter(function(name) {
+  return name !== 'SWIR';
+});
+var indexLabels = indexNames.map(function(name) {
+  return indexOptions[name].label;
+});
+
+function calculateIndex(image, indexName) {
+  return indexOptions[indexName].calculate(image);
+}
+
+function getMonthlyCollection(selectedYear, selectedMonth) {
+  var startDate = ee.Date(selectedYear + '-' + selectedMonth + '-01');
+  var endDate = startDate.advance(1, 'month');
+  var satellite = satelliteOptions[chosenSatellite];
+
+  return ee.ImageCollection(satellite.collection)
+    .filterBounds(roi)
+    .filterDate(startDate, endDate);
+}
+
+function getSelectedIndexImage() {
+  if (chosenProduct === 'Monthly Median Mosaic' && selectedCollection) {
+    return selectedCollection.map(function(image) {
+      return calculateIndex(image, chosenIndex);
+    }).median().rename(chosenIndex);
+  }
+
+  return calculateIndex(selectedImage, chosenIndex);
 }
 
 /**** UI PANEL ****/
+var colors = {
+  primary: '#24543d',
+  primaryDark: '#173b2b',
+  accent: '#d9a441',
+  background: '#f4f6f3',
+  card: '#ffffff',
+  border: '#d6ddd7',
+  text: '#26332c',
+  muted: '#66736b'
+};
 
-// Main panel
-var panel = ui.Panel({style: {width: '300px'}});
+var panel = ui.Panel({
+  style: {
+    width: '360px',
+    padding: '0',
+    backgroundColor: colors.background
+  }
+});
 ui.root.insert(0, panel);
 
-// Instruction message (removed after date & AOI selection)
+var titleLabel = ui.Label({
+  value: 'SATELLITE INDEX EXPLORER',
+  style: {
+    color: colors.accent,
+    backgroundColor: colors.primaryDark,
+    fontWeight: 'bold',
+    fontSize: '19px',
+    margin: '0 0 3px 0',
+    padding: '0',
+    stretch: 'horizontal'
+  }
+});
+var subtitleLabel = ui.Label({
+  value: 'Surface reflectance indices and raster export',
+  style: {
+    color: '#dce9e1',
+    backgroundColor: colors.primaryDark,
+    fontSize: '12px',
+    margin: '0',
+    padding: '0',
+    stretch: 'horizontal'
+  }
+});
+var headerPanel = ui.Panel({
+  widgets: [titleLabel, subtitleLabel],
+  style: {
+    backgroundColor: colors.primaryDark,
+    padding: '18px 16px 16px 16px',
+    stretch: 'horizontal'
+  }
+});
 var instructionLabel = ui.Label({
-  value: 'Follow the instructions below to directly download a GPI (Grassland Production Intensity) raster image in a custom AOI (Area of Interest)',
-  style: {fontSize: '14px'}
+  value: 'Choose a data source and date, mark your area, then select and clip an image.',
+  style: {
+    fontSize: '13px',
+    color: colors.muted,
+    backgroundColor: '#e8eee9',
+    padding: '10px 12px',
+    margin: '12px 14px 8px 14px',
+    border: '1px solid ' + colors.border,
+    borderRadius: '4px',
+    whiteSpace: 'normal'
+  }
 });
-panel.add(instructionLabel);
-
-var instructionLabel2 = ui.Label({
-  value: '1.) Add a placemarker on AOI',
-  style: {fontSize: '14px', fontWeight: 'bold'}
+var thumbsPanel = ui.Panel({style: {padding: '4px 12px 12px 12px'}});
+var mosaicInfoLabel = ui.Label({
+  value: '',
+  style: {
+    color: colors.muted,
+    fontSize: '12px',
+    margin: '0 14px 4px 14px'
+  }
 });
-panel.add(instructionLabel2);
+var clipPrompt = ui.Label({
+  value: 'Use the map toolbar to draw a free-form polygon or rectangle.',
+  style: {
+    fontWeight: 'bold',
+    fontSize: '13px',
+    color: colors.primaryDark,
+    backgroundColor: '#e8eee9',
+    padding: '12px',
+    margin: '14px',
+    border: '1px solid ' + colors.border,
+    borderRadius: '4px'
+  }
+});
 
-// Drawing Tools for AOI selection (Point only)
+function sectionLabel(step, text) {
+  return ui.Label({
+    value: step + '  ' + text.toUpperCase(),
+    style: {
+      color: colors.primary,
+      fontWeight: 'bold',
+      fontSize: '11px',
+      margin: '10px 14px 5px 14px'
+    }
+  });
+}
+
+function statusCard() {
+  return ui.Label({
+    value: chosenSatellite + '  •  ' + indexOptions[chosenIndex].label +
+      '  •  ' + chosenProduct,
+    style: {
+      color: colors.text,
+      backgroundColor: colors.card,
+      padding: '9px 11px',
+      margin: '12px 14px 6px 14px',
+      border: '1px solid ' + colors.border,
+      borderRadius: '4px',
+      fontSize: '12px'
+    }
+  });
+}
+
 var drawingTools = Map.drawingTools();
 drawingTools.setShown(true);
-drawingTools.setDrawModes(['point']); // Restrict to points only
+drawingTools.setDrawModes(['point']);
 
-// Listen for AOI selection (removes previous AOI if new one is drawn)
-drawingTools.onDraw(function(newGeom) {
-  drawingTools.layers().reset(); // Remove previous AOI
-
-  // Keep the new AOI on the map
-  roi = newGeom;
-  var roiLayer = ui.Map.Layer(roi, {color: 'red'}, 'Selected AOI');
-  Map.layers().set(0, roiLayer); // Ensures it stays visible
-
-  checkSelectionReady();
+// Handle both drawing stages without accumulating callbacks
+drawingTools.onDraw(function(geometry) {
+  drawingTools.layers().reset();
+  if (drawingStage === 'roi') {
+    roi = geometry;
+    Map.layers().set(0, ui.Map.Layer(roi, {color: 'red'}, 'Selected AOI'));
+    checkSelectionReady();
+    return;
+  }
+  clipPolygon = geometry;
+  showClippedIndex();
 });
 
-// Panel to hold thumbnails
-var thumbsPanel = ui.Panel();
-panel.add(thumbsPanel);
-
-// Label prompting user to draw clipping boundary
-var clipPrompt = ui.Label({
-  value: 'Draw a polygon to clip the image',
-  style: {fontWeight: 'bold', fontSize: '14px', color: 'black'}
-});
-clipPrompt.style().set('shown', false); // Hidden until needed
-
-// "Download" button (Initially Hidden)
 var downloadButton = ui.Button({
-  label: 'Download Clipped Image',
-  onClick: function() {
-    processAndDownload(selectedImage);
+  label: 'Create Download Link',
+  onClick: processAndDownload,
+  style: {
+    stretch: 'horizontal',
+    color: colors.primaryDark,
+    backgroundColor: '#c9ddcf',
+    fontWeight: 'bold',
+    margin: '10px 14px 4px 14px'
   }
 });
-downloadButton.style().set('shown', false); // Hide button initially
-
-// Download link label
-var downloadLinkLabel = ui.Label(''); // Will show the actual download link
-downloadLinkLabel.style().set('shown', false);
-
-// "Go Back" button to return to thumbnails
 var goBackButton = ui.Button({
-  label: 'Go Back',
+  label: '← Choose a Different Month',
   onClick: function() {
-    updateThumbnails(chosenYear, chosenMonth);
+    requestVersion++;
+    selectedImage = null;
+    selectedCollection = null;
+    chosenMonth = null;
+    drawingStage = 'roi';
+    clipPolygon = null;
+    drawingTools.layers().reset();
+    drawingTools.setDrawModes(['point']);
+    monthSelect.setValue(null, false);
+    Map.layers().reset();
+
+    if (roi) {
+      Map.layers().set(0, ui.Map.Layer(roi, {color: 'red'}, 'Selected AOI'));
+    }
+
+    showInitialPanel();
+  },
+  style: {
+    stretch: 'horizontal',
+    color: colors.primaryDark,
+    backgroundColor: '#e3e8e4',
+    margin: '4px 14px 12px 14px'
   }
 });
-goBackButton.style().set('shown', false); // Initially hidden
 
-/**** YEAR & MONTH SELECTORS ****/
+/**** SELECTORS ****/
 var years = [];
-for (var y = 2016; y <= 2025; y++) {
-  years.push(y.toString());
+for (var year = satelliteOptions[chosenSatellite].startYear;
+  year <= satelliteOptions[chosenSatellite].endYear; year++) {
+  years.push(year.toString());
 }
 
 var months = [
-  {label: 'January', value: '01'},
-  {label: 'February', value: '02'},
-  {label: 'March', value: '03'},
-  {label: 'April', value: '04'},
-  {label: 'May', value: '05'},
-  {label: 'June', value: '06'},
-  {label: 'July', value: '07'},
-  {label: 'August', value: '08'},
-  {label: 'September', value: '09'},
-  {label: 'October', value: '10'},
-  {label: 'November', value: '11'},
-  {label: 'December', value: '12'}
+  {label: 'January', value: '01'}, {label: 'February', value: '02'},
+  {label: 'March', value: '03'}, {label: 'April', value: '04'},
+  {label: 'May', value: '05'}, {label: 'June', value: '06'},
+  {label: 'July', value: '07'}, {label: 'August', value: '08'},
+  {label: 'September', value: '09'}, {label: 'October', value: '10'},
+  {label: 'November', value: '11'}, {label: 'December', value: '12'}
 ];
 
-// Year selection
+var satelliteSelect = ui.Select({
+  items: Object.keys(satelliteOptions),
+  value: chosenSatellite,
+  style: {
+    stretch: 'horizontal',
+    margin: '0 14px 2px 14px',
+    backgroundColor: colors.card
+  },
+  onChange: function(value) {
+    requestVersion++;
+    chosenSatellite = value;
+    chosenYear = null;
+    chosenMonth = null;
+    selectedImage = null;
+    selectedCollection = null;
+    clipPolygon = null;
+    drawingStage = 'roi';
+    drawingTools.layers().reset();
+    drawingTools.setDrawModes(['point']);
+    updateYearOptions();
+    monthSelect.setValue(null, false);
+    updateIndexOptions();
+    showInitialPanel();
+  }
+});
+
+var indexSelect = ui.Select({
+  items: indexLabels,
+  value: indexOptions.GPI.label,
+  style: {
+    stretch: 'horizontal',
+    margin: '0 14px 2px 14px',
+    backgroundColor: colors.card
+  },
+  onChange: function(label) {
+    chosenIndex = indexNames[indexLabels.indexOf(label)];
+    if (selectedImage && clipPolygon) {
+      showClippedIndex();
+    } else if (selectedImage) {
+      showSelectedImage(selectedImage);
+    }
+  }
+});
+var productSelect = ui.Select({
+  items: ['Single Scene (LEAST CLOUDY)', 'Monthly Median Mosaic'],
+  value: chosenProduct,
+  style: {
+    stretch: 'horizontal',
+    margin: '0 14px 2px 14px',
+    backgroundColor: colors.card
+  },
+  onChange: function(value) {
+    requestVersion++;
+    chosenProduct = value;
+    selectedImage = null;
+    selectedCollection = null;
+    clipPolygon = null;
+    drawingStage = 'roi';
+    drawingTools.layers().reset();
+    drawingTools.setDrawModes(['point']);
+    checkSelectionReady();
+  }
+});
 var yearSelect = ui.Select({
   items: years,
   placeholder: 'Choose Year',
-  style: {width: '120px'},
-  onChange: function(val) {
-    chosenYear = val;
+  style: {stretch: 'horizontal', margin: '0 4px 0 0', backgroundColor: colors.card},
+  onChange: function(value) {
+    chosenYear = value;
     checkSelectionReady();
   }
 });
-panel.add(ui.Label({
-  value: '2.) Select Year:', 
-  style: {fontSize: '14px', fontWeight: 'bold'}}));
-panel.add(yearSelect);
-
-// Month selection
 var monthSelect = ui.Select({
-  items: months.map(function(m) { return m.label; }),
+  items: months.map(function(month) { return month.label; }),
   placeholder: 'Choose Month',
-  style: {width: '120px'},
-  onChange: function(val) {
-    chosenMonth = months[monthSelect.items().indexOf(val)].value;
+  style: {stretch: 'horizontal', margin: '0 0 0 4px', backgroundColor: colors.card},
+  onChange: function(label) {
+    chosenMonth = months[monthSelect.items().indexOf(label)].value;
     checkSelectionReady();
   }
 });
-panel.add(ui.Label({
-  value: '3.) Select Month:',
-  style: {fontSize: '14px', fontWeight: 'bold'}}));
-panel.add(monthSelect);
 
-/**** CHECK IF BOTH DATE & AOI ARE SELECTED BEFORE FETCHING IMAGES ****/
+// Reuse the container so its controls retain a single parent
+var datePanel = ui.Panel({
+  widgets: [yearSelect, monthSelect],
+  layout: ui.Panel.Layout.flow('horizontal'),
+  style: {stretch: 'horizontal', margin: '0 14px 4px 14px'}
+});
+
+function updateYearOptions() {
+  var satellite = satelliteOptions[chosenSatellite];
+  years = [];
+  for (var year = satellite.startYear; year <= satellite.endYear; year++) {
+    years.push(year.toString());
+  }
+  yearSelect.items().reset(years);
+  yearSelect.setValue(null, false);
+}
+
+function updateIndexOptions() {
+  indexNames = satelliteOptions[chosenSatellite].supportsGPI
+    ? Object.keys(indexOptions).filter(function(name) { return name !== 'SWIR'; })
+    : Object.keys(indexOptions).filter(function(name) { return name !== 'GPI'; });
+  indexLabels = indexNames.map(function(name) { return indexOptions[name].label; });
+
+  if (indexNames.indexOf(chosenIndex) === -1) {
+    chosenIndex = 'NDVI';
+  }
+  indexSelect.items().reset(indexLabels);
+  indexSelect.setValue(indexOptions[chosenIndex].label, false);
+}
+
+function resetApp() {
+  requestVersion++;
+  roi = null;
+  selectedImage = null;
+  selectedCollection = null;
+  clipPolygon = null;
+  chosenYear = null;
+  chosenMonth = null;
+  chosenSatellite = 'Sentinel-2';
+  chosenIndex = 'GPI';
+  chosenProduct = 'Single Scene (LEAST CLOUDY)';
+  drawingStage = 'roi';
+
+  satelliteSelect.setValue(chosenSatellite, false);
+  productSelect.setValue(chosenProduct, false);
+  updateYearOptions();
+  monthSelect.setValue(null, false);
+  updateIndexOptions();
+  drawingTools.layers().reset();
+  drawingTools.setDrawModes(['point']);
+  Map.layers().reset();
+  Map.setCenter(10, 50, 4);
+  showInitialPanel();
+}
+
+function makeResetButton() {
+  return ui.Button({
+    label: '↻ Reset App',
+    onClick: resetApp,
+    style: {
+      stretch: 'horizontal',
+      color: colors.primaryDark,
+      backgroundColor: '#edf1ee',
+      fontWeight: 'bold',
+      margin: '4px 14px 14px 14px',
+      border: '1px solid ' + colors.border
+    }
+  });
+}
+
+function showInitialPanel() {
+  panel.clear();
+  panel.add(headerPanel);
+  panel.add(instructionLabel);
+  panel.add(sectionLabel('01', 'Satellite'));
+  panel.add(satelliteSelect);
+  panel.add(sectionLabel('02', 'Spectral product'));
+  panel.add(indexSelect);
+  panel.add(sectionLabel('03', 'Acquisition date'));
+  panel.add(datePanel);
+  panel.add(sectionLabel('04', 'Image product'));
+  panel.add(productSelect);
+  panel.add(sectionLabel('05', 'Area of interest'));
+  panel.add(ui.Label({
+    value: 'Select the point tool on the map and place one marker inside your area.',
+    style: {
+      color: colors.text,
+      backgroundColor: colors.card,
+      padding: '10px 12px',
+      margin: '0 14px 16px 14px',
+      border: '1px solid ' + colors.border,
+      borderRadius: '4px',
+      fontSize: '12px'
+    }
+  }));
+  panel.add(makeResetButton());
+}
+
+showInitialPanel();
+
 function checkSelectionReady() {
   if (chosenYear && chosenMonth && roi) {
-    if (panel.widgets().contains(instructionLabel)) {
-      panel.remove(instructionLabel); // Remove only once
+    if (chosenProduct === 'Monthly Median Mosaic') {
+      createMonthlyMedian(chosenYear, chosenMonth);
+    } else {
+      updateThumbnails(chosenYear, chosenMonth);
     }
-    if (panel.widgets().contains(instructionLabel2)) {
-      panel.remove(instructionLabel2);
-    }
-    updateThumbnails(chosenYear, chosenMonth);
   }
 }
 
+/**** IMAGE SELECTION AND MOSAICS ****/
+function createMonthlyMedian(selectedYear, selectedMonth) {
+  var currentRequest = ++requestVersion;
+  selectedImage = null;
+  selectedCollection = null;
+  clipPolygon = null;
 
-/**** THUMBNAILS & IMAGE DISPLAY ****/
-function updateThumbnails(selectedYear, selectedMonth) {
   panel.clear();
+  panel.add(headerPanel);
+  panel.add(statusCard());
+  panel.add(ui.Label({
+    value: 'Building cloud-masked monthly median…',
+    style: {
+      color: colors.primary,
+      backgroundColor: colors.card,
+      padding: '12px',
+      margin: '12px 14px',
+      border: '1px solid ' + colors.border,
+      borderRadius: '4px'
+    }
+  }));
+  panel.add(makeResetButton());
+
+  var monthlyImages = getMonthlyCollection(selectedYear, selectedMonth);
+  monthlyImages.size().evaluate(function(sceneCount) {
+    if (currentRequest !== requestVersion) {
+      return;
+    }
+
+    if (!sceneCount) {
+      panel.clear();
+      panel.add(headerPanel);
+      panel.add(statusCard());
+      panel.add(ui.Label({
+        value: 'No scenes were found for this area and month.',
+        style: {
+          color: '#8a3d2f',
+          backgroundColor: '#f8e9e5',
+          padding: '11px',
+          margin: '12px 14px',
+          border: '1px solid #e7c9c1',
+          borderRadius: '4px'
+        }
+      }));
+      panel.add(goBackButton);
+      panel.add(makeResetButton());
+      return;
+    }
+
+    selectedCollection = monthlyImages.map(function(image) {
+      return prepareImage(image, true);
+    });
+    selectedImage = selectedCollection.median();
+    mosaicInfoLabel.setValue(
+      sceneCount + ' cloud-masked scene' + (sceneCount === 1 ? '' : 's') +
+      ' included in the monthly median.'
+    );
+    drawingStage = 'clip';
+    drawingTools.layers().reset();
+    drawingTools.setDrawModes(['polygon', 'rectangle']);
+    showSelectedImage(selectedImage);
+    Map.centerObject(roi, 12);
+  });
+}
+
+function updateThumbnails(selectedYear, selectedMonth) {
+  selectedImage = null;
+  selectedCollection = null;
+  drawingStage = 'roi';
+  drawingTools.setDrawModes(['point']);
+  panel.clear();
+  panel.add(headerPanel);
+  panel.add(statusCard());
+  panel.add(sectionLabel('05', 'Select a scene'));
   panel.add(thumbsPanel);
+  panel.add(makeResetButton());
   thumbsPanel.clear();
 
-  var startDate = ee.Date(selectedYear + '-' + selectedMonth + '-01');
-  var endDate = startDate.advance(1, 'month');
+  var satellite = satelliteOptions[chosenSatellite];
+  var filtered = getMonthlyCollection(selectedYear, selectedMonth)
+    .sort(satellite.cloudProperty)
+    .limit(3);
 
-  var filtered = s2Sr
-    .filterBounds(roi)
-    .filterDate(startDate, endDate);
+  filtered.toList(3).evaluate(function(imageList) {
+    if (!imageList || imageList.length === 0) {
+      thumbsPanel.add(ui.Label({
+        value: 'No scenes were found for this area and month.',
+        style: {
+          color: '#8a3d2f',
+          backgroundColor: '#f8e9e5',
+          padding: '11px',
+          margin: '5px 2px 10px 2px',
+          border: '1px solid #e7c9c1',
+          borderRadius: '4px'
+        }
+      }));
+      thumbsPanel.add(goBackButton);
+      return;
+    }
 
-  var sorted = filtered.sort('CLOUDY_PIXEL_PERCENTAGE');
-  var best3 = sorted.limit(3);
+    imageList.forEach(function(imageInfo) {
+      var image = prepareImage(ee.Image(imageInfo.id));
+      var properties = imageInfo.properties;
+      var date = new Date(properties['system:time_start']).toISOString().split('T')[0];
+      var cloudValue = properties[satellite.cloudProperty];
+      var cloudText = cloudValue === undefined
+        ? 'Clouds: N/A'
+        : 'Clouds: ' + cloudValue.toFixed(1) + '%';
+      var thumbnail = ui.Thumbnail({
+        image: image,
+        params: {
+          dimensions: '150x150',
+          bands: ['red', 'green', 'blue'],
+          min: 0,
+          max: 0.3
+        },
+        style: {stretch: 'horizontal', margin: '0 0 4px 0'}
+      });
+      var metadata = ui.Label({
+        value: 'Date: ' + date + '\n' + cloudText,
+        style: {whiteSpace: 'pre', fontSize: '12px', margin: '4px 0'}
+      });
+      var selectButton = ui.Button({
+        label: 'Select Image',
+        onClick: function() {
+          selectedImage = image;
+          clipPolygon = null;
+          drawingStage = 'clip';
+          drawingTools.layers().reset();
+          drawingTools.setDrawModes(['polygon', 'rectangle']);
+          showSelectedImage(image);
+          Map.centerObject(roi, 12);
+        }
+      });
+      selectButton.style().set({
+        stretch: 'horizontal',
+        color: colors.primaryDark,
+        backgroundColor: '#c9ddcf',
+        fontWeight: 'bold',
+        margin: '6px 0 0 0'
+      });
+      thumbsPanel.add(ui.Panel({
+        widgets: [thumbnail, metadata, selectButton],
+        layout: ui.Panel.Layout.flow('vertical'),
+        style: {
+          stretch: 'horizontal',
+          backgroundColor: colors.card,
+          padding: '10px',
+          margin: '5px 2px',
+          border: '1px solid ' + colors.border,
+          borderRadius: '5px'
+        }
+      }));
+    });
+    thumbsPanel.add(goBackButton);
+  });
+}
 
-  var sizeValue = best3.size().getInfo();
-  if (sizeValue === 0) {
-    showMessage('No images found.', 'red');
+function showSelectedImage(image) {
+  Map.layers().reset();
+  Map.addLayer(image, rgbViz, 'RGB');
+  Map.addLayer(
+    getSelectedIndexImage(),
+    indexOptions[chosenIndex].viz,
+    chosenIndex
+  );
+  panel.clear();
+  panel.add(headerPanel);
+  panel.add(statusCard());
+  panel.add(sectionLabel('06', chosenProduct === 'Monthly Median Mosaic'
+    ? 'Monthly median result'
+    : 'Displayed product'));
+  if (chosenProduct === 'Monthly Median Mosaic') {
+    panel.add(mosaicInfoLabel);
+  }
+  panel.add(indexSelect);
+  panel.add(clipPolygon ? downloadButton : clipPrompt);
+  panel.add(goBackButton);
+  panel.add(makeResetButton());
+}
+
+function showClippedIndex() {
+  var clippedIndex = getSelectedIndexImage().clip(clipPolygon);
+  Map.layers().reset();
+  Map.addLayer(
+    clippedIndex,
+    indexOptions[chosenIndex].viz,
+    'Clipped ' + chosenIndex
+  );
+  panel.clear();
+  panel.add(headerPanel);
+  panel.add(statusCard());
+  panel.add(sectionLabel('07', 'Review and download'));
+  panel.add(indexSelect);
+  panel.add(downloadButton);
+  panel.add(goBackButton);
+  panel.add(makeResetButton());
+}
+
+/**** DOWNLOAD ****/
+function processAndDownload() {
+  if (!selectedImage || !clipPolygon) {
+    panel.add(ui.Label({
+      value: 'Select an image and draw a clipping boundary first.',
+      style: {
+        color: '#8a3d2f',
+        backgroundColor: '#f8e9e5',
+        padding: '10px',
+        margin: '8px 14px',
+        border: '1px solid #e7c9c1'
+      }
+    }));
     return;
   }
 
-  var bestList = best3.toList(3);
-
-  for (var i = 0; i < sizeValue; i++) {
-    var thisImage = ee.Image(bestList.get(i));
-
-    var selectBtn = ui.Button({
-      label: 'Select Image',
-      onClick: function() {
-        selectedImage = thisImage;
-        Map.layers().reset();
-        Map.addLayer(thisImage, viz, 'RGB');
-        Map.addLayer(calculateGPI(thisImage).select('GPI'), gpiViz, 'GPI');
-        Map.centerObject(thisImage, 9);
-
-        panel.clear();
-        panel.add(clipPrompt);
-        panel.add(goBackButton);
-        clipPrompt.style().set('shown', true);
-        goBackButton.style().set('shown', true);
-
-        drawingTools.setDrawModes(['polygon']);
-        drawingTools.onDraw(function(poly) {
-          clipPolygon = poly;
-          Map.layers().reset(); // Remove full scene, show clipped version
-          var clippedImage = calculateGPI(selectedImage).clip(clipPolygon);
-          Map.addLayer(clippedImage.select('GPI'), gpiViz, 'Clipped GPI');
-          
-          panel.widgets().reset();
-          panel.add(downloadButton);
-          downloadButton.style().set('shown', true);
-        });
-      }
-    });
-
-    thumbsPanel.add(ui.Panel([ui.Thumbnail({image: thisImage, params: {dimensions: '150x150', bands: ['B4','B3','B2'], min: 0, max: 3000}, style: {margin: '4px'}}), selectBtn], ui.Panel.Layout.flow('vertical')));
-  }
-}
-
-/**** PROCESS IMAGE & GENERATE DOWNLOAD LINK ****/
-/**** PROCESS IMAGE & GENERATE DOWNLOAD LINK (Only GPI) ****/
-function processAndDownload(image) {
-  var clippedGPI = calculateGPI(image).select('GPI').clip(clipPolygon);
-
-  // Generate the download URL
-  var gpiUrl = clippedGPI.getDownloadURL({
-    name: 'GPI_Clipped_Image',
-    scale: 30,
+  var clippedIndex = getSelectedIndexImage().clip(clipPolygon);
+  var productName = chosenProduct === 'Monthly Median Mosaic'
+    ? 'Monthly_Median'
+    : 'Single_Scene';
+  var downloadUrl = clippedIndex.getDownloadURL({
+    name: chosenSatellite.replace(' ', '_') + '_' + chosenIndex + '_' +
+      chosenYear + '_' + chosenMonth + '_' + productName,
+    scale: satelliteOptions[chosenSatellite].scale,
     region: clipPolygon,
     format: 'GeoTIFF',
     maxPixels: 1e8
   });
 
-  // Clear panel and show the download button
   panel.clear();
-  panel.add(ui.Label('Download Clipped GPI Image:', {fontWeight: 'bold'}));
-
+  panel.add(headerPanel);
+  panel.add(statusCard());
+  panel.add(sectionLabel('08', 'Export ready'));
   panel.add(ui.Label({
-    value: 'download link',
-    style: {color: 'blue', textDecoration: 'underline'},
-    targetUrl: gpiUrl
+    value: 'Your clipped ' + chosenIndex + ' GeoTIFF is ready.',
+    style: {
+      color: colors.text,
+      backgroundColor: colors.card,
+      padding: '11px',
+      margin: '0 14px 6px 14px',
+      border: '1px solid ' + colors.border,
+      borderRadius: '4px'
+    }
   }));
+  panel.add(ui.Label({
+    value: '↓  Download GeoTIFF',
+    style: {
+      color: colors.primaryDark,
+      backgroundColor: colors.accent,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      padding: '11px',
+      margin: '4px 14px 8px 14px',
+      borderRadius: '4px',
+      stretch: 'horizontal'
+    },
+    targetUrl: downloadUrl
+  }));
+  panel.add(goBackButton);
+  panel.add(makeResetButton());
 }

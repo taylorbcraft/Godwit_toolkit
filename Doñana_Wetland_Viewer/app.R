@@ -43,7 +43,7 @@ server <- function(input, output, session) {
   output$year_select <- renderUI({
     req(all_locations())
     years <- sort(unique(format(all_locations()$timestamp, "%Y")), decreasing = TRUE)
-    years <- c(years, "All years")
+    years <- c(years, "All Years")
     default_year <- if ("2025" %in% years) "2025" else years[1]
     selectInput("year", "Select year", choices = years, selected = default_year)
   })
@@ -75,7 +75,7 @@ server <- function(input, output, session) {
     r <- projectRasterForLeaflet(r, method = "bilinear")
     r <- spatSample(r, 100000, method = "regular", as.raster = TRUE)
     
-    donana_shp <- "Donana_flooding/donana_geometry/Donana.shp"
+    donana_shp <- "donana_geometry/Donana.shp"
     if (file.exists(donana_shp)) {
       donana_geom <- st_read(donana_shp, quiet = TRUE) |> st_transform(crs(r))
       r <- mask(r, vect(donana_geom))

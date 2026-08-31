@@ -1,0 +1,23 @@
+{"kind":"deck","id":"pr/zb93dh","name":"Deck"}
+{"kind":"layout","layoutId":"4bcb3b04-8539-4657-8b20-75c938a2cbee","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"2af70a7c-a24a-4673-8931-47a070e9d77f","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/ef8ejd","slide":1,"title":"GOOGLE EARTH ENGINE APP","textShapes":12}
+{"kind":"textbox","id":"sh/8v61wrex","slide":1,"name":"eyebrow","text":"GOOGLE EARTH ENGINE APP","textPreview":"GOOGLE EARTH ENGINE APP","textChars":23,"textLines":1,"bbox":[62,44,420,28]}
+{"kind":"textbox","id":"sh/7udknmdc","slide":1,"name":"title","text":"Satellite Index Explorer","textPreview":"Satellite Index Explorer","textChars":24,"textLines":1,"bbox":[62,82,1120,64]}
+{"kind":"textbox","id":"sh/6t4juhwr","slide":1,"name":"subtitle","text":"Explore surface reflectance indices and export analysis-ready rasters","textPreview":"Explore surface reflectance indices and export analysis-ready rasters","textChars":69,"textLines":1,"bbox":[62,143,670,42]}
+{"kind":"shape","id":"sh/lsv2lcv6","slide":1,"name":"marker-1","bbox":[64,233,14,14]}
+{"kind":"textbox","id":"sh/krm1s7el","slide":1,"name":"feature-heading-1","text":"MULTI-SENSOR","textPreview":"MULTI-SENSOR","textChars":12,"textLines":1,"bbox":[94,228,450,25]}
+{"kind":"textbox","id":"sh/j6d0j2d0","slide":1,"name":"feature-description-1","text":"Sentinel-2 and Landsat 7, 8 & 9 imagery","textPreview":"Sentinel-2 and Landsat 7, 8 & 9 imagery","textChars":39,"textLines":1,"bbox":[94,257,470,46]}
+{"kind":"shape","id":"sh/y54jqxwv","slide":1,"name":"marker-2","bbox":[64,325,14,14]}
+{"kind":"textbox","id":"sh/poz2xgva","slide":1,"name":"feature-heading-2","text":"SEVEN INDICES","textPreview":"SEVEN INDICES","textChars":13,"textLines":1,"bbox":[94,320,450,25]}
+{"kind":"textbox","id":"sh/4nq14be5","slide":1,"name":"feature-description-2","text":"GPI, NDVI, EVI, NDWI, NDMI, SAVI and SWIR","textPreview":"GPI, NDVI, EVI, NDWI, NDMI, SAVI and SWIR","textChars":41,"textLines":1,"bbox":[94,349,470,46]}
+{"kind":"shape","id":"sh/e5gjepwj","slide":1,"name":"marker-3","bbox":[64,417,14,14]}
+{"kind":"textbox","id":"sh/f6pknudo","slide":1,"name":"feature-heading-3","text":"FLEXIBLE COMPOSITES","textPreview":"FLEXIBLE COMPOSITES","textChars":19,"textLines":1,"bbox":[94,412,450,25]}
+{"kind":"textbox","id":"sh/07y1gzu9","slide":1,"name":"feature-description-3","text":"Least-cloudy scenes or monthly median mosaics","textPreview":"Least-cloudy scenes or monthly median mosaics","textChars":45,"textLines":1,"bbox":[94,441,470,46]}
+{"kind":"shape","id":"sh/1872pkvu","slide":1,"name":"marker-4","bbox":[64,509,14,14]}
+{"kind":"textbox","id":"sh/qhwja5w7","slide":1,"name":"feature-heading-4","text":"READY TO USE","textPreview":"READY TO USE","textChars":12,"textLines":1,"bbox":[94,504,450,25]}
+{"kind":"textbox","id":"sh/ri50jads","slide":1,"name":"feature-description-4","text":"Interactive clipping and native-resolution GeoTIFF export","textPreview":"Interactive clipping and native-resolution GeoTIFF export","textChars":57,"textLines":1,"bbox":[94,533,470,46]}
+{"kind":"shape","id":"sh/sje1cfed","slide":1,"name":"image-accent","bbox":[607,205,595,428]}
+{"kind":"textbox","id":"sh/ad0jm9cr","slide":1,"name":"image-caption","text":"Example: Landsat 9 SWIR monthly median mosaic over southern Spain","textPreview":"Example: Landsat 9 SWIR monthly median mosaic over southern Spain","textChars":65,"textLines":1,"bbox":[596,638,595,26]}
+{"kind":"image","id":"im/m10bapcr","slide":1,"name":"","alt":"Satellite Index Explorer showing a Landsat 9 monthly median surface-water index over southern Spain","bbox":[596,194,595,428]}
+{"kind":"notes","id":"nt/ef8ejd","slide":1,"text":"[Sources]\n- User-provided Satellite Index Explorer screenshot.\n- Project source: GEE_code/GPI Raster Export.js."}

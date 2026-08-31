@@ -116,7 +116,7 @@ server <- function(input, output, session) {
     }
     if (!is.null(rv$aoi)) {
       df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
-      df <- df_sf[st_intersects(df_sf, rv$aoi, sparse = FALSE), ]
+      df <- df_sf[st_intersects(df_sf, rv$aoi, sparse = FALSE), ] %>% st_drop_geometry()
     }
     df
   })
@@ -150,9 +150,20 @@ server <- function(input, output, session) {
       addGlPoints(data = df_sf, group = "locations", popup = TRUE,
                   radius = 3, fillColor = 'cyan') %>%
       addRasterImage(selected_raster, project = FALSE, colors = pal) %>%
+      addDrawToolbar(
+        targetGroup = "aoi",
+        editOptions = editToolbarOptions(),
+        polylineOptions = FALSE,
+        markerOptions = FALSE,
+        circleMarkerOptions = FALSE
+      ) %>%
       addLegend(position = "bottomright", pal = pal, values = values(selected_raster),
                 title = "GPI", opacity = 0.7, bins = 2,
                 labFormat = function(type, cuts, p) c("low", "high"))
+
+    if (!is.null(rv$aoi)) {
+      map <- map %>% addPolygons(data = rv$aoi, group = "aoi", color = "red", weight = 2, fill = FALSE)
+    }
     
     # add red polyline if single bird selected
     if (input$selected_bird != "All Birds") {
@@ -179,6 +190,18 @@ server <- function(input, output, session) {
     coords <- input$map_draw_new_feature$geometry$coordinates[[1]]
     coords <- matrix(unlist(coords), ncol = 2, byrow = TRUE)
     rv$aoi <- st_as_sf(st_sfc(st_polygon(list(coords)), crs = 4326))
+  })
+
+  observeEvent(input$map_draw_edited_features, {
+    features <- input$map_draw_edited_features$features
+    if (length(features) == 0) return()
+    coords <- features[[1]]$geometry$coordinates[[1]]
+    coords <- matrix(unlist(coords), ncol = 2, byrow = TRUE)
+    rv$aoi <- st_as_sf(st_sfc(st_polygon(list(coords)), crs = 4326))
+  })
+
+  observeEvent(input$map_draw_deleted_features, {
+    rv$aoi <- NULL
   })
   
   # summary

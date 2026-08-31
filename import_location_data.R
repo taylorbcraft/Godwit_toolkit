@@ -68,8 +68,8 @@ teamPiersmaHQXS <- load_study_with_name(1563249841, login)
 teamPiersmaHQXS2022 <- load_study_with_name(2083443328, login)
 teamPiersmaHQXS2023 <- load_study_with_name(2654984909, login)
 teamPiersmaHQXS2024 <- load_study_with_name(3395897563, login)
-teamPiersmaHQXS2025 <- load_study_with_name(3395897563, login)
-teamPiersmaInterrex2023 <- load_study_with_name(6288645742, login)
+teamPiersmaHQXS2025 <- load_study_with_name(6288645742, login)
+teamPiersmaInterrex2023 <- load_study_with_name(2621200322, login)
 wildjuv <- load_study_with_name(75360602, login)
 wildjuv2016 <- load_study_with_name(170829089, login)
 wildjuv2017 <- load_study_with_name(282596404, login)
@@ -79,11 +79,12 @@ cat("All studies downloaded\n")
 # Merge all studies
 all_study_data <- rbindlist(list(
   ib19, microwave2021, extremadura2022, extremadura2023, southholland2021, BtgTagus2021,
-  ad_dum2018, ad_dum2019, ad_dum2020, ad_dum2021, ad_dum2022, ad_dum2023, ad_dum2024,
-  ch_dum2018, ch_dum2019, ch_dum2020, ch_dum2021, ch_dum2022, ch_dum2023, ch_dum2024,
+  ad_dum2018, ad_dum2019, ad_dum2020, ad_dum2021, ad_dum2022, ad_dum2023, ad_dum2024, ad_dum2025,
+  ch_dum2018, ch_dum2019, ch_dum2020, ch_dum2021, ch_dum2022, ch_dum2023, ch_dum2024, ch_dum2025,
+  godwit_flyway,
   hmadults, hrjuv, hrjuv2016, hrjuv2017,
   HQXS_Black_tailed_godwits, iberiaBlackwits, icarus, polish,
-  teamPiersmaHQXS, teamPiersmaHQXS2022, teamPiersmaHQXS2023, teamPiersmaHQXS2024,
+  teamPiersmaHQXS, teamPiersmaHQXS2022, teamPiersmaHQXS2023, teamPiersmaHQXS2024, teamPiersmaHQXS2025,
   teamPiersmaInterrex2023, wildjuv, wildjuv2016, wildjuv2017, VeenVitaal2023
 ), use.names = TRUE, fill = TRUE)
 

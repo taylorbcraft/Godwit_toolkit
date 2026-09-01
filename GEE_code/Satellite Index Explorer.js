@@ -10,7 +10,7 @@ var clipPolygon = null;
 var chosenYear = null;
 var chosenMonth = null;
 var chosenSatellite = 'Sentinel-2';
-var chosenIndex = 'GPI';
+var chosenIndex = 'S2REP';
 var chosenProduct = 'Single Scene (LEAST CLOUDY)';
 var drawingStage = 'roi';
 var requestVersion = 0;
@@ -29,7 +29,7 @@ var satelliteOptions = {
     outputBands: ['blue', 'green', 'red', 'nir', 'swir1',
       'redEdge1', 'redEdge2', 'redEdge3'],
     scale: 10,
-    supportsGPI: true
+    supportsS2REP: true
   },
   'Landsat 7': {
     collection: 'LANDSAT/LE07/C02/T1_L2',
@@ -39,7 +39,7 @@ var satelliteOptions = {
     sourceBands: ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5'],
     outputBands: ['blue', 'green', 'red', 'nir', 'swir1'],
     scale: 30,
-    supportsGPI: false
+    supportsS2REP: false
   },
   'Landsat 8': {
     collection: 'LANDSAT/LC08/C02/T1_L2',
@@ -49,7 +49,7 @@ var satelliteOptions = {
     sourceBands: ['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6'],
     outputBands: ['blue', 'green', 'red', 'nir', 'swir1'],
     scale: 30,
-    supportsGPI: false
+    supportsS2REP: false
   },
   'Landsat 9': {
     collection: 'LANDSAT/LC09/C02/T1_L2',
@@ -59,7 +59,7 @@ var satelliteOptions = {
     sourceBands: ['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6'],
     outputBands: ['blue', 'green', 'red', 'nir', 'swir1'],
     scale: 30,
-    supportsGPI: false
+    supportsS2REP: false
   }
 };
 
@@ -97,8 +97,8 @@ function prepareImage(image, applyMask) {
 
 // Index formulas and display settings
 var indexOptions = {
-  GPI: {
-    label: 'GPI - Grassland Production Intensity',
+  S2REP: {
+    label: 'S2REP - Sentinel-2 Red-Edge Position',
     viz: {min: 708, max: 741, palette: ['yellow', 'green', 'grey']},
     calculate: function(image) {
       var red = image.select('red');
@@ -109,7 +109,7 @@ var indexOptions = {
         ee.Image(35).multiply(
           redEdge3.add(red).divide(2).subtract(redEdge1)
         ).divide(redEdge2.subtract(redEdge1))
-      ).rename('GPI');
+      ).rename('S2REP');
     }
   },
   NDVI: {
@@ -282,7 +282,7 @@ var mosaicInfoLabel = ui.Label({
   }
 });
 var clipPrompt = ui.Label({
-  value: 'Use the map toolbar to draw a free-form polygon or rectangle.',
+  value: 'Click and drag on the map to draw or redraw the rectangular download area. Use the toolbar to draw a polygon instead.',
   style: {
     fontWeight: 'bold',
     fontSize: '13px',
@@ -324,32 +324,44 @@ function statusCard() {
 }
 
 var drawingTools = Map.drawingTools();
-drawingTools.setShown(false);
-drawingTools.setDrawModes([]);
 
-// Handle both drawing stages without accumulating callbacks
+function startAreaDrawing() {
+  drawingTools.setShown(true);
+  drawingTools.setDrawModes(['polygon', 'rectangle']);
+  drawingTools.setShape('rectangle');
+  Map.style().set('cursor', 'crosshair');
+}
+
+function startPointSelection() {
+  drawingTools.layers().reset();
+  drawingTools.setShown(false);
+  drawingTools.setDrawModes([]);
+  Map.style().set('cursor', 'crosshair');
+}
+
+// Use drawn geometry for clipping
 drawingTools.onDraw(function(geometry) {
   drawingTools.layers().reset();
-  if (drawingStage === 'roi') {
-    roi = geometry;
-    Map.layers().set(0, ui.Map.Layer(roi, {color: 'red'}, 'Selected AOI'));
-    checkSelectionReady();
+  if (drawingStage !== 'clip') {
     return;
   }
   clipPolygon = geometry;
   showClippedIndex();
 });
 
-// Select the search area with a map click
+// Select the point used to find available imagery
 Map.onClick(function(coordinates) {
   if (drawingStage !== 'roi') {
     return;
   }
 
   roi = ee.Geometry.Point([coordinates.lon, coordinates.lat]);
-  Map.layers().set(0, ui.Map.Layer(roi, {color: 'red'}, 'Search location'));
+  clipPolygon = null;
+  Map.layers().set(0, ui.Map.Layer(roi, {color: 'red'}, 'Imagery search point'));
   checkSelectionReady();
 });
+
+startPointSelection();
 
 var downloadButton = ui.Button({
   label: 'Download satellite image',
@@ -362,34 +374,34 @@ var downloadButton = ui.Button({
     margin: '10px 14px 4px 14px'
   }
 });
-var goBackButton = ui.Button({
-  label: '← Choose a Different Month',
-  onClick: function() {
-    requestVersion++;
-    selectedImage = null;
-    selectedCollection = null;
-    chosenMonth = null;
-    drawingStage = 'roi';
-    clipPolygon = null;
-    drawingTools.layers().reset();
-    drawingTools.setShown(false);
-    drawingTools.setDrawModes([]);
-    monthSelect.setValue(null, false);
-    Map.layers().reset();
+function makeGoBackButton() {
+  return ui.Button({
+    label: '← Choose a Different Month',
+    onClick: function() {
+      requestVersion++;
+      selectedImage = null;
+      selectedCollection = null;
+      chosenMonth = null;
+      drawingStage = 'roi';
+      clipPolygon = null;
+      startPointSelection();
+      monthSelect.setValue(null, false);
+      Map.layers().reset();
 
-    if (roi) {
-      Map.layers().set(0, ui.Map.Layer(roi, {color: 'red'}, 'Selected AOI'));
+      if (roi) {
+        Map.layers().set(0, ui.Map.Layer(roi, {color: 'red'}, 'Imagery search point'));
+      }
+
+      showInitialPanel();
+    },
+    style: {
+      stretch: 'horizontal',
+      color: colors.primaryDark,
+      backgroundColor: '#e3e8e4',
+      margin: '4px 14px 12px 14px'
     }
-
-    showInitialPanel();
-  },
-  style: {
-    stretch: 'horizontal',
-    color: colors.primaryDark,
-    backgroundColor: '#e3e8e4',
-    margin: '4px 14px 12px 14px'
-  }
-});
+  });
+}
 
 /**** SELECTORS ****/
 var years = [];
@@ -424,9 +436,7 @@ var satelliteSelect = ui.Select({
     selectedCollection = null;
     clipPolygon = null;
     drawingStage = 'roi';
-    drawingTools.layers().reset();
-    drawingTools.setShown(false);
-    drawingTools.setDrawModes([]);
+    startPointSelection();
     updateYearOptions();
     monthSelect.setValue(null, false);
     updateIndexOptions();
@@ -436,7 +446,7 @@ var satelliteSelect = ui.Select({
 
 var indexSelect = ui.Select({
   items: indexLabels,
-  value: indexOptions.GPI.label,
+  value: indexOptions.S2REP.label,
   style: {
     stretch: 'horizontal',
     margin: '0 14px 2px 14px',
@@ -466,9 +476,7 @@ var productSelect = ui.Select({
     selectedCollection = null;
     clipPolygon = null;
     drawingStage = 'roi';
-    drawingTools.layers().reset();
-    drawingTools.setShown(false);
-    drawingTools.setDrawModes([]);
+    startPointSelection();
     checkSelectionReady();
   }
 });
@@ -509,9 +517,9 @@ function updateYearOptions() {
 }
 
 function updateIndexOptions() {
-  indexNames = satelliteOptions[chosenSatellite].supportsGPI
+  indexNames = satelliteOptions[chosenSatellite].supportsS2REP
     ? Object.keys(indexOptions).filter(function(name) { return name !== 'SWIR'; })
-    : Object.keys(indexOptions).filter(function(name) { return name !== 'GPI'; });
+    : Object.keys(indexOptions).filter(function(name) { return name !== 'S2REP'; });
   indexLabels = indexNames.map(function(name) { return indexOptions[name].label; });
 
   if (indexNames.indexOf(chosenIndex) === -1) {
@@ -530,7 +538,7 @@ function resetApp() {
   chosenYear = null;
   chosenMonth = null;
   chosenSatellite = 'Sentinel-2';
-  chosenIndex = 'GPI';
+  chosenIndex = 'S2REP';
   chosenProduct = 'Single Scene (LEAST CLOUDY)';
   drawingStage = 'roi';
 
@@ -539,9 +547,7 @@ function resetApp() {
   updateYearOptions();
   monthSelect.setValue(null, false);
   updateIndexOptions();
-  drawingTools.layers().reset();
-  drawingTools.setShown(false);
-  drawingTools.setDrawModes([]);
+  startPointSelection();
   Map.layers().reset();
   Map.setCenter(10, 50, 4);
   showInitialPanel();
@@ -576,7 +582,7 @@ function showInitialPanel() {
   panel.add(productSelect);
   panel.add(sectionLabel('05', 'Area of interest'));
   panel.add(ui.Label({
-    value: 'Click anywhere inside your area on the map. No drawing tool is needed for this step.',
+    value: 'Click once on the map to place a search point. The point is used to find available satellite imagery. You will draw the download clipping area after choosing an image.',
     style: {
       color: colors.text,
       backgroundColor: colors.card,
@@ -607,7 +613,6 @@ function createMonthlyMedian(selectedYear, selectedMonth) {
   var currentRequest = ++requestVersion;
   selectedImage = null;
   selectedCollection = null;
-  clipPolygon = null;
 
   panel.clear();
   panel.add(headerPanel);
@@ -646,7 +651,7 @@ function createMonthlyMedian(selectedYear, selectedMonth) {
           borderRadius: '4px'
         }
       }));
-      panel.add(goBackButton);
+      panel.add(makeGoBackButton());
       panel.add(makeResetButton());
       return;
     }
@@ -661,8 +666,7 @@ function createMonthlyMedian(selectedYear, selectedMonth) {
     );
     drawingStage = 'clip';
     drawingTools.layers().reset();
-    drawingTools.setShown(true);
-    drawingTools.setDrawModes(['polygon', 'rectangle']);
+    startAreaDrawing();
     showSelectedImage(selectedImage);
     Map.centerObject(roi, 12);
   });
@@ -672,8 +676,7 @@ function updateThumbnails(selectedYear, selectedMonth) {
   selectedImage = null;
   selectedCollection = null;
   drawingStage = 'roi';
-  drawingTools.setShown(false);
-  drawingTools.setDrawModes([]);
+  startPointSelection();
   panel.clear();
   panel.add(headerPanel);
   panel.add(statusCard());
@@ -700,7 +703,7 @@ function updateThumbnails(selectedYear, selectedMonth) {
           borderRadius: '4px'
         }
       }));
-      thumbsPanel.add(goBackButton);
+      thumbsPanel.add(makeGoBackButton());
       return;
     }
 
@@ -730,11 +733,9 @@ function updateThumbnails(selectedYear, selectedMonth) {
         label: 'Select Image',
         onClick: function() {
           selectedImage = image;
-          clipPolygon = null;
           drawingStage = 'clip';
           drawingTools.layers().reset();
-          drawingTools.setShown(true);
-          drawingTools.setDrawModes(['polygon', 'rectangle']);
+          startAreaDrawing();
           showSelectedImage(image);
           Map.centerObject(roi, 12);
         }
@@ -759,7 +760,7 @@ function updateThumbnails(selectedYear, selectedMonth) {
         }
       }));
     });
-    thumbsPanel.add(goBackButton);
+    thumbsPanel.add(makeGoBackButton());
   });
 }
 
@@ -771,6 +772,9 @@ function showSelectedImage(image) {
     indexOptions[chosenIndex].viz,
     chosenIndex
   );
+  if (clipPolygon) {
+    Map.addLayer(clipPolygon, {color: 'yellow'}, 'Download area');
+  }
   panel.clear();
   panel.add(headerPanel);
   panel.add(statusCard());
@@ -782,7 +786,7 @@ function showSelectedImage(image) {
   }
   panel.add(indexSelect);
   panel.add(clipPolygon ? downloadButton : clipPrompt);
-  panel.add(goBackButton);
+  panel.add(makeGoBackButton());
   panel.add(makeResetButton());
 }
 
@@ -800,8 +804,9 @@ function showClippedIndex() {
   panel.add(sectionLabel('07', 'Review and download'));
   panel.add(indexSelect);
   panel.add(downloadButton);
-  panel.add(goBackButton);
+  panel.add(makeGoBackButton());
   panel.add(makeResetButton());
+  startAreaDrawing();
 }
 
 /**** DOWNLOAD ****/
@@ -849,54 +854,59 @@ function processAndDownload() {
     }
   }));
 
-  clippedIndex.getDownloadURL(downloadParameters, function(downloadUrl, error) {
+  try {
+    var downloadUrl = clippedIndex.getDownloadURL(downloadParameters);
+    if (!downloadUrl) {
+      throw new Error('Earth Engine did not return a download link. Try a smaller clipping area.');
+    }
     panel.clear();
     panel.add(headerPanel);
     panel.add(statusCard());
-
-    if (error || !downloadUrl) {
-      panel.add(sectionLabel('08', 'Export failed'));
-      panel.add(ui.Label({
-        value: error || 'Earth Engine could not create the download link. Try a smaller clipping area.',
-        style: {
-          color: '#8a3d2f',
-          backgroundColor: '#f8e9e5',
-          padding: '11px',
-          margin: '0 14px 8px 14px',
-          border: '1px solid #e7c9c1',
-          borderRadius: '4px'
-        }
-      }));
-    } else {
-      panel.add(sectionLabel('08', 'Export ready'));
-      panel.add(ui.Label({
-        value: 'Your clipped ' + chosenIndex + ' GeoTIFF is ready.',
-        style: {
-          color: colors.text,
-          backgroundColor: colors.card,
-          padding: '11px',
-          margin: '0 14px 6px 14px',
-          border: '1px solid ' + colors.border,
-          borderRadius: '4px'
-        }
-      }));
-      panel.add(ui.Label({
-        value: '↓  Download satellite image',
-        style: {
-          color: colors.primaryDark,
-          backgroundColor: colors.accent,
-          fontWeight: 'bold',
-          textAlign: 'center',
-          padding: '11px',
-          margin: '4px 14px 8px 14px',
-          borderRadius: '4px',
-          stretch: 'horizontal'
-        },
-        targetUrl: downloadUrl
-      }));
-    }
-
-    panel.add(goBackButton);
+    panel.add(sectionLabel('08', 'Export ready'));
+    panel.add(ui.Label({
+      value: 'Your clipped ' + chosenIndex + ' GeoTIFF is ready.',
+      style: {
+        color: colors.text,
+        backgroundColor: colors.card,
+        padding: '11px',
+        margin: '0 14px 6px 14px',
+        border: '1px solid ' + colors.border,
+        borderRadius: '4px'
+      }
+    }));
+    panel.add(ui.Label({
+      value: '↓  Download satellite image',
+      style: {
+        color: colors.primaryDark,
+        backgroundColor: colors.accent,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        padding: '11px',
+        margin: '4px 14px 8px 14px',
+        borderRadius: '4px',
+        stretch: 'horizontal'
+      },
+      targetUrl: downloadUrl
+    }));
+    panel.add(makeGoBackButton());
     panel.add(makeResetButton());
-  });
+  } catch (error) {
+    panel.clear();
+    panel.add(headerPanel);
+    panel.add(statusCard());
+    panel.add(sectionLabel('08', 'Export failed'));
+    panel.add(ui.Label({
+      value: error.message || 'Earth Engine could not create the download link. Try a smaller clipping area.',
+      style: {
+        color: '#8a3d2f',
+        backgroundColor: '#f8e9e5',
+        padding: '11px',
+        margin: '0 14px 8px 14px',
+        border: '1px solid #e7c9c1',
+        borderRadius: '4px'
+      }
+    }));
+    panel.add(makeGoBackButton());
+    panel.add(makeResetButton());
+  }
 }

@@ -9,14 +9,14 @@ library(ggplot2)
 library(patchwork)
 
 ui <- fluidPage(
-  titlePanel("Grassland Production Intensity Viewer in Southwest Friesland"),
+  titlePanel("Sentinel-2 Red-Edge Position Viewer in Southwest Friesland"),
   
   sidebarLayout(
     sidebarPanel(
       h3("Instructions"),
-      p("1. Filter location and GPI data by year and date."),
+      p("1. Filter location and S2REP data by year and date."),
       p("2. Use the drawing tools on the map to draw an area of interest (AOI)."),
-      p("3. The number of individuals, number of locations, a histogram of GPI values, and a boxplot comparing used vs available locations will be shown."),
+      p("3. The number of individuals, number of locations, a histogram of S2REP values, and a boxplot comparing used vs available locations will be shown."),
       
       uiOutput("year_select"),
       uiOutput("date_slider"),
@@ -32,7 +32,7 @@ ui <- fluidPage(
     mainPanel(
       leafletOutput("map"),
       verbatimTextOutput("summary"),
-      plotOutput("gpi_plots", height = "350px")
+      plotOutput("s2rep_plots", height = "350px")
     )
   )
 )
@@ -48,17 +48,17 @@ server <- function(input, output, session) {
   rv <- reactiveValues(aoi = NULL)
   
   # load rasters
-  gpi_rasters <- reactive({
-    files <- list.files("gpi_data", pattern = "\\.tif$", full.names = TRUE)
-    validate(need(length(files) > 0, "Loading GPI rasters... please wait"))
+  s2rep_rasters <- reactive({
+    files <- list.files("s2rep_data", pattern = "\\.tif$", full.names = TRUE)
+    validate(need(length(files) > 0, "Loading S2REP rasters... please wait"))
     
     rasters <- list()
     for (file in files) {
-      year <- gsub(".*gpi_(\\d{4})\\.tif$", "\\1", file)
+      year <- gsub(".*s2rep_(\\d{4})\\.tif$", "\\1", file)
       r <- rast(file)
       r <- projectRasterForLeaflet(r, method = 'bilinear')
       r <- spatSample(r, 100000, method = "regular", as.raster = TRUE)
-      rasters[[paste0("gpi_", year)]] <- r
+      rasters[[paste0("s2rep_", year)]] <- r
     }
     rasters
   })
@@ -67,8 +67,8 @@ server <- function(input, output, session) {
   output$year_select <- renderUI({
     req(all_locations())
     loc_years <- unique(format(all_locations()$timestamp, "%Y"))
-    raster_files <- list.files("gpi_data", pattern = "gpi_\\d{4}\\.tif$")
-    raster_years <- gsub("gpi_(\\d{4})\\.tif", "\\1", raster_files)
+    raster_files <- list.files("s2rep_data", pattern = "s2rep_\\d{4}\\.tif$")
+    raster_years <- gsub("s2rep_(\\d{4})\\.tif", "\\1", raster_files)
     valid_years <- sort(intersect(loc_years, raster_years), decreasing = TRUE)
     year_choices <- c(valid_years, "All Years")
     default_year <- ifelse(length(valid_years) > 0, valid_years[1], "All Years")
@@ -134,9 +134,9 @@ server <- function(input, output, session) {
     
     df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326)
     if (input$year == "All Years") {
-      selected_raster <- gpi_rasters()[["gpi_2024"]]
+      selected_raster <- s2rep_rasters()[["s2rep_2024"]]
     } else {
-      selected_raster <- gpi_rasters()[[paste0("gpi_", input$year)]]
+      selected_raster <- s2rep_rasters()[[paste0("s2rep_", input$year)]]
     }
     
     pal <- colorNumeric(palette = "YlGn", domain = values(selected_raster), na.color = "transparent")
@@ -158,7 +158,7 @@ server <- function(input, output, session) {
         circleMarkerOptions = FALSE
       ) %>%
       addLegend(position = "bottomright", pal = pal, values = values(selected_raster),
-                title = "GPI", opacity = 0.7, bins = 2,
+                title = "S2REP", opacity = 0.7, bins = 2,
                 labFormat = function(type, cuts, p) c("low", "high"))
 
     if (!is.null(rv$aoi)) {
@@ -226,9 +226,9 @@ server <- function(input, output, session) {
     df_sf <- st_as_sf(bird_data(), coords = c("location_long", "location_lat"), crs = 4326)
     
     if (input$year == "All Years") {
-      r <- gpi_rasters()[["gpi_2024"]]
+      r <- s2rep_rasters()[["s2rep_2024"]]
     } else {
-      r <- gpi_rasters()[[paste0("gpi_", input$year)]]
+      r <- s2rep_rasters()[[paste0("s2rep_", input$year)]]
     }
     req(r)
     
@@ -256,12 +256,12 @@ server <- function(input, output, session) {
     )
     
     vals <- terra::extract(r, vect(combined_sf))
-    combined_sf$gpi_val <- vals[, 2]
+    combined_sf$s2rep_val <- vals[, 2]
     st_drop_geometry(combined_sf)
   })
   
   # combined histogram + boxplot
-  output$gpi_plots <- renderPlot({
+  output$s2rep_plots <- renderPlot({
     req(bird_data(), input$year)
     df <- bird_data()
     if (nrow(df) == 0) {
@@ -270,27 +270,27 @@ server <- function(input, output, session) {
     
     # select raster
     if (input$year == "All Years") {
-      r <- gpi_rasters()[["gpi_2024"]]
+      r <- s2rep_rasters()[["s2rep_2024"]]
     } else {
-      r <- gpi_rasters()[[paste0("gpi_", input$year)]]
+      r <- s2rep_rasters()[[paste0("s2rep_", input$year)]]
     }
     req(r)
     
-    # extract GPI for used points
+    # extract S2REP for used points
     df_sf <- st_as_sf(df, coords = c("location_long", "location_lat"), crs = 4326) |>
       st_transform(crs(r))
     vals <- terra::extract(r, vect(df_sf))
-    gpi_vals <- vals[, 2]
-    gpi_vals <- gpi_vals[!is.na(gpi_vals)]
+    s2rep_vals <- vals[, 2]
+    s2rep_vals <- s2rep_vals[!is.na(s2rep_vals)]
     
-    if (length(gpi_vals) == 0) {
-      plot.new(); text(0.5, 0.5, "no GPI values available", cex = 1.5); return()
+    if (length(s2rep_vals) == 0) {
+      plot.new(); text(0.5, 0.5, "no S2REP values available", cex = 1.5); return()
     }
     
     # Histogram
-    p1 <- ggplot(data.frame(gpi_val = gpi_vals), aes(x = gpi_val)) +
+    p1 <- ggplot(data.frame(s2rep_val = s2rep_vals), aes(x = s2rep_val)) +
       geom_histogram(fill = "darkgreen", color = "white", bins = 30) +
-      labs(x = "Grassland Production Intensity", y = "Godwit Locations") +
+      labs(x = "Sentinel-2 Red-Edge Position", y = "Godwit Locations") +
       theme_minimal(base_size = 14)
     
     # Use vs availability boxplot
@@ -298,9 +298,9 @@ server <- function(input, output, session) {
     if (nrow(df_use_avail) > 0) {
       df_use_avail$type <- factor(df_use_avail$type, levels = c("used", "available"))
       
-      p2 <- ggplot(df_use_avail, aes(x = type, y = gpi_val, fill = type)) +
+      p2 <- ggplot(df_use_avail, aes(x = type, y = s2rep_val, fill = type)) +
         geom_boxplot(width = 0.6, outlier.alpha = 0.3) +
-        labs(x = NULL, y = "Grassland Production Intensity") +
+        labs(x = NULL, y = "Sentinel-2 Red-Edge Position") +
         theme_minimal(base_size = 14) +
         theme(axis.text.x = element_text(size = 13), legend.position = "none") +
         scale_fill_manual(values = c("used" = "lightyellow", "available" = "darkgreen"))

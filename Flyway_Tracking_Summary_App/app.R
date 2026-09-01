@@ -37,7 +37,7 @@ tag_sites <- sort(unique(as.character(na.omit(all_data$tag_site))))
 default_migration_year <- tail(migration_years, 1)
 default_year_dates <- range(all_data[migration_year == default_migration_year]$date)
 index_display_ranges <- list(
-  GPI = c(708, 741),
+  S2REP = c(708, 741),
   NDVI = c(-0.2, 0.9),
   EVI = c(-0.2, 1),
   NDWI = c(-0.5, 0.8),
@@ -163,7 +163,7 @@ ui <- page_fillable(
     class = "app-header",
     div(
       class = "app-title",
-      span("Godwit Movement & Environment Explorer")
+      span("Godwit Movement Explorer")
     )
   ),
   layout_sidebar(
@@ -179,10 +179,10 @@ ui <- page_fillable(
           ),
           tags$ol(
             class = "filter-help ps-3",
-            tags$li("Filter the movement records."),
-            tags$li("Draw, choose or upload an area when needed."),
-            tags$li("Create and upload a clipped image in the Environment tab."),
-            tags$li("Review sampled values or download a summary.")
+            tags$li("Filter bird movement data."),
+            tags$li("Focus on an area by drawing a polygon, selecting a country, or upload your own boundaries."),
+            tags$li("Visualise and download satellite imagery in the Environment tab."),
+            tags$li("Explore how bird movements relate to environmental variables.")
           )
         ),
         hr(),
@@ -274,7 +274,7 @@ ui <- page_fillable(
                 div(
                   class = "pt-3",
                   uiOutput("analysis_controls"),
-                  withSpinner(plotlyOutput("lat_plot", height = "360px"), type = 6, color = "#b4532a"),
+                  uiOutput("lat_plot_ui"),
                   layout_columns(
                     card(class = "analysis-card", card_header("Selection summary"), tableOutput("summary_table")),
                     card(class = "analysis-card", card_header("Visits in the selected area"), uiOutput("visit_controls"), DTOutput("visit_table")),
@@ -293,7 +293,7 @@ ui <- page_fillable(
                 card_header("1. Build a satellite layer in Google Earth Engine"),
                 p(
                   class = "filter-help",
-                  "Define an area and period and choose an index. Before downloading, draw a clipping area around the area you need. Clipping is required to keep the download size manageable."
+                  "Choose a satellite index to explore vegetation, soil, and water properties over a defined time and area. Before downloading, draw a clipping area around the area you need. Clipping is required to keep the download size manageable."
                 ),
                 tags$details(
                   tags$summary("Satellite Index Explorer"),
@@ -324,7 +324,7 @@ ui <- page_fillable(
                   div(
                     p(
                       class = "filter-help",
-                      "The first raster band is sampled at the currently filtered bird-day locations. Change the movement filters or AOI to update every result below."
+                      "Change the movement filters or AOI to update every result below."
                     ),
                     uiOutput("generated_raster_status")
                   ),
@@ -571,7 +571,7 @@ server <- function(input, output, session) {
   })
 
   generated_raster_label <- reactive({
-    supported_indices <- c("GPI", "NDVI", "EVI", "NDWI", "NDMI", "SAVI", "SWIR")
+    supported_indices <- c("S2REP", "NDVI", "EVI", "NDWI", "NDMI", "SAVI", "SWIR")
     raster_text <- toupper(paste(
       names(generated_raster()),
       tools::file_path_sans_ext(input$generated_raster$name),
@@ -589,7 +589,7 @@ server <- function(input, output, session) {
     sampled_values <- generated_raster_values()$value
     sampled_median <- median(sampled_values, na.rm = TRUE)
     if (is.finite(sampled_median) && abs(sampled_median) > 2) {
-      return("GPI")
+      return("S2REP")
     }
 
     "Satellite index"
@@ -756,11 +756,30 @@ server <- function(input, output, session) {
     )
   }, ignoreInit = TRUE)
 
+  output$lat_plot_ui <- renderUI({
+    single_bird_selected <- !is.null(input$selected_bird) && input$selected_bird != "All"
+    if (!single_bird_selected && is.null(rv$aoi)) {
+      return(div(
+        class = "empty-state",
+        "Select one individual or define an area of interest to view latitude through time."
+      ))
+    }
+
+    withSpinner(
+      plotlyOutput("lat_plot", height = "360px"),
+      type = 6,
+      color = "#b4532a"
+    )
+  })
+
   output$lat_plot <- renderPlotly({
+    single_bird_selected <- !is.null(input$selected_bird) && input$selected_bird != "All"
+    req(single_bird_selected || !is.null(rv$aoi))
+
     df <- copy(aoi_filtered_data())
     validate(need(nrow(df) > 0, "No movement data match the current filters."))
 
-    if (!is.null(input$selected_bird) && input$selected_bird != "All") {
+    if (single_bird_selected) {
       df <- filtered_data()[trackId == input$selected_bird]
     }
 

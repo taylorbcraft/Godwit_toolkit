@@ -75,6 +75,7 @@ jobs:
             )
             rsconnect::deployApp(
               appDir = 'Flyway_Tracking_Summary_App',
+              appName = 'godwit-movement-explorer',
               quarto = NA,
               forceUpdate = TRUE
             )

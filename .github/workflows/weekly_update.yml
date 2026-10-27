@@ -59,7 +59,7 @@ jobs:
 
       - name: Refresh movement data
         if: github.event_name != 'push'
-        run: Rscript --vanilla import_location_data.R
+        run: Rscript import_location_data.R
 
       - name: Deploy application
         env:
